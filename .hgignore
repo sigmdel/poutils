@@ -1,0 +1,84 @@
+# .hgignore for Lazarus
+# see wiki.freepascal.org/file_types, http://wiki.freepascal.org/File_extensions
+# http://forum.lazarus.freepascal.org/index.php?topic=9298.0
+# and https://github.com/github/gitignore/blob/master/Global/Lazarus.gitignore
+#
+
+syntax: glob
+
+###---May need to change these -----------------------
+
+# Linux executables
+# Unfortunately this has to be modified with each project
+# It would be best if executables where systematically placed in a
+# 'bin' sub directory
+poclean
+pocopy
+pofill
+poignore
+poinfo
+pomerge
+posort
+postrip
+poswap
+poupdate
+
+*.po
+
+# Uncomment these types if you want even more clean repository. But be careful.
+# It can make harm to an existing project source. Read explanations below.
+
+# C/C++ object files produced when C/C++ Output file generation is configured.
+# Uncomment this if you are not using external objects (zlib library for example).
+#*.obj
+
+# Resource files are binaries containing project icon and version info.
+# They can not be viewed as text or compared by diff-tools. Replaced with
+# 'rc' files if possible.
+*.res
+
+# This is a personal choice, I set PO Output Directory (in
+# to language which is app.po will be written if i18n is enabled.
+# I keep edited versions of app.po and translated .po files in
+# the languages sub directory.
+language
+
+###-------------------------
+
+# Compiler-generated binaries (safe to delete)
+*.exe
+*.dll
+*.so
+*.dylib
+*.lrs
+*.compiled
+*.dbg
+*.ppu
+*.o
+*.or
+*.a
+
+# Lazarus auto-generated files (duplicated info)
+*.rst
+*.rsj
+*.lrt
+
+# Lazarus local files (user-specific info)
+*.lps
+*.fpcunit.ini
+
+# Application bundle for Mac OS
+*.app
+
+# Backup, unit and binary output folders
+backup
+*.orig
+*.bak
+*.~*
+*~
+lib
+bin/po*
+
+# Archives
+*.zip
+*.z
