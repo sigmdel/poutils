@@ -24,13 +24,7 @@ begin
   else begin
     PoFile := TPoFile.Create(ParamFilename(1));
     try
-      writeln('Source: ', PoFile.Filename);
-      writeln('  Entries: ', PoFile.count);
-      writeln('  Errors: ', PoFile.ErrorCount);
-      writeln('  Fuzzys: ', PoFile.FuzzyCount);
-      writeln('  Duplicate entities: ', PoFile.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', PoFile.DuplicateMsgidCount);
-      writeln('  Duplicate msgstr: ', PoFile.DuplicateMsgstrCount);
+      PoFile.WriteStatistics('Source');
       for i := 0 to PoFile.count-1 do begin
         if (i = 0) and (PoFile[i].entity = '') then
           continue;
@@ -45,9 +39,9 @@ begin
       else
         fname := PoFile.Filename;
       if not SaveToBackup(fname) then
-        fname := RandomFilename(fname);
+        fname := (fname);
       PoFile.SaveToFile(fname);
-      writeln('Output: ', fname);
+      PoFile.WriteStatistics('Output');
     finally
       PoFile.free;
     end;

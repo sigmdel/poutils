@@ -28,22 +28,8 @@ begin
     RemovePo := TPoFile.Create(ParamFilename(2));
     OutPo := TPoFile.Create('');
     try
-      writeln('Source: ', SourcePo.filename);
-      writeln('  Entries: ', SourcePo.count);
-      writeln('  Errors: ', SourcePo.ErrorCount);
-      writeln('  Fuzzys: ', SourcePo.FuzzyCount);
-      writeln('  Duplicate entities: ', SourcePo.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', SourcePo.DuplicateMsgidCount);
-      writeln('  Duplicate msgstr: ', SourcePo.DuplicateMsgstrCount);
-
-      writeln('Remove: ', RemovePo.filename);
-      writeln('  Entries: ', RemovePo.count);
-      writeln('  Errors: ', RemovePo.ErrorCount);
-      writeln('  Fuzzys: ', RemovePo.FuzzyCount);
-      writeln('  Duplicate entities: ', RemovePo.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', RemovePo.DuplicateMsgidCount);
-      writeln('  Duplicate msgstr: ', RemovePo.DuplicateMsgstrCount);
-
+      SourcePo.WriteStatistics('Source');
+      RemovePo.WriteStatistics('Remove');
       for i := 0 to SourcePo.count-1 do begin
         if ((i = 0) and (SourcePo[i].entity = '')) or (RemovePo.IndexOfEntity(SourcePo[i].Entity) < 0) then
           OutPo.Insert(OutPo.count).Assign(SourcePo[i]);
@@ -55,16 +41,9 @@ begin
         fname := SourcePo.filename;
 
       if not SaveToBackup(fname) then
-        fname := RandomFilename(fname);
+        fname := UniqueFilename(fname);
       OutPo.SaveToFile(fname);
-      OutPo.UpdateCounts;
-      writeln('Output: ', fname);
-      writeln('  Entries: ', OutPo.count);
-      writeln('  Errors: ', OutPo.ErrorCount);
-      writeln('  Fuzzys: ', OutPo.FuzzyCount);
-      writeln('  Duplicate entities: ', OutPo.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', OutPo.DuplicateMsgidCount);
-      writeln('  Duplicate msgstr: ', OutPo.DuplicateMsgstrCount);
+      OutPo.WriteStatistics('Output');
     finally
       SourcePo.free;
       RemovePo.free;

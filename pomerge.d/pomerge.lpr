@@ -23,21 +23,10 @@ begin
   else begin
     SourcePo := TPoFile.Create(ParamFilename(1));
     try
-      writeln('Source 1: ', SourcePo.filename);
-      writeln('  Entries: ', SourcePo.count);
-      writeln('  Errors: ', SourcePo.ErrorCount);
-      writeln('  Fuzzys: ', SourcePo.FuzzyCount);
-      writeln('  Duplicate entities: ', SourcePo.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', SourcePo.DuplicateMsgidCount);
-
+      SourcePo.WriteStatistics('Source');
       MorePo := TPoFile.Create(ParamFilename(2));
       try
-        writeln('Source 2: ', MorePo.filename);
-        writeln('  Entries: ', MorePo.count);
-        writeln('  Errors: ', MorePo.ErrorCount);
-        writeln('  Fuzzys: ', MorePo.FuzzyCount);
-        writeln('  Duplicate entities: ', MorePo.DuplicateEntityCount);
-        writeln('  Duplicate msgid: ', MorePo.DuplicateMsgidCount);
+        MorePo.WriteStatistics('More');
 
         for i := MorePo.count-1 downto 0 do begin
           //writeln(Format('dbg: MorePo[%d].entity="%s"', [i, MorePo[i].entity]));
@@ -74,28 +63,16 @@ begin
           fname := SourcePo.Filename;
         SaveToBackup(fname);
         SourcePo.SaveToFile(fname);
-        SourcePo.UpdateCounts;
-        writeln('Output: ', fname);
-        writeln('  Entries: ', SourcePo.count);
-        writeln('  Errors: ', SourcePo.ErrorCount);
-        writeln('  Fuzzys: ', SourcePo.FuzzyCount);
-        writeln('  Duplicate entities: ', SourcePo.DuplicateEntityCount);
-        writeln('  Duplicate msgid: ', SourcePo.DuplicateMsgidCount);
+        SourcePo.WriteStatistics('Output');
 
         If (MorePo.Count = 0) or ((MorePo.Count = 1) and (MorePo[0].entity = '') ) then
           writeln('No conflicting entries')
         else begin
-          MorePo.UpdateCounts;
           fname := MorePo.Filename + '.conflicts';
           if not SaveToBackup(fname) then
-            fname := RandomFilename(fname);
+            fname := UniqueFilename(fname);
           MorePo.SaveToFile(fname);
-          writeln('Conflicts: ', fname);
-          writeln('  Entries: ', MorePo.count);
-          writeln('  Errors: ', MorePo.ErrorCount);
-          writeln('  Fuzzys: ', MorePo.FuzzyCount);
-          writeln('  Duplicate entities: ', MorePo.DuplicateEntityCount);
-          writeln('  Duplicate msgid: ', MorePo.DuplicateMsgidCount);
+          MorePo.WriteStatistics('Conflicts');
         end;
       finally
         MorePo.free;

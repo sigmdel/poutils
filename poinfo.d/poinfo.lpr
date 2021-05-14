@@ -10,6 +10,8 @@ uses
 
 var
   PoFile: TPoFile;
+  i: integer;
+
 begin
   if (paramcount <> 1)  then begin
     writeln('Verifies po file syntax and reports some statistics');
@@ -24,19 +26,25 @@ begin
     try
       if PoFile.ErrorCount > 0 then
         writeln;
-      writeln('Source: ', PoFile.Filename);
-      writeln('  Entries: ', PoFile.count);
-      writeln('  Errors: ', PoFile.ErrorCount);
-      writeln('  Fuzzys: ', PoFile.FuzzyCount);
-      writeln('  Duplicate entities: ', PoFile.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', PoFile.DuplicateMsgidCount);
-      writeln('  Duplicate msgstr: ', PoFile.DuplicateMsgstrCount);
-      if (PoFile.DuplicateEntityCount > 0)
-      or (PoFile.DuplicateMsgidCount > 0)
-      or (PoFile.DuplicateMsgstrCount > 0)then begin
-        writeln;
-        PoFile.ReportDuplicates;
+      PoFile.WriteStatistics('Source');
+      with PoFile do begin
+        for i := 0 to Count-1 do with Entries[i] do begin
+          if isFuzzy or hasAltmsgid or hasDuplicateEntity
+          or hasDuplicateMsgId or hasDuplicateMsgstr then
+            writeln;
+          if isFuzzy then
+            writeln(Format('Entry %d (%s) is fuzzy', [i, entity]));
+          if hasAltmsgid then
+            writeln(Format('Entry %d (%s) has an alternate msgid', [i, entity]));
+          if hasDuplicateEntity then
+            writeln(Format('Entry %d (%s) has a duplicate entity', [i, entity]));
+          if hasDuplicateMsgid then
+            writeln(Format('Entry %d (%s) has a duplicate msgid', [i, entity]));
+          if hasDuplicateMsgstr then
+            writeln(Format('Entry %d (%s) has a duplicate msgstr', [i, entity]));
+        end;
       end;
+
     finally
       PoFile.free;
     end;

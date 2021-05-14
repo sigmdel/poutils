@@ -22,20 +22,14 @@ begin
   else begin
     PoFile := TPoFile.Create(ParamFilename(1));
     try
-      writeln('Source: ', PoFile.Filename);
-      writeln('  Entries: ', PoFile.count);
-      writeln('  Errors: ', PoFile.ErrorCount);
-      writeln('  Fuzzys: ', PoFile.FuzzyCount);
-      writeln('  Duplicate entities: ', PoFile.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', PoFile.DuplicateMsgidCount);
-      writeln('  Duplicate msgstr: ', PoFile.DuplicateMsgstrCount);
+      PoFile.WriteStatistics('Source');
       PoFile.Sort;
       if paramcount > 1 then
         fname := ParamFilename(2)
       else
         fname := PoFile.Filename;
       if not SaveToBackup(fname) then
-        fname := RandomFilename(fname);
+        fname := UniqueFilename(fname);
       PoFile.SaveToFile(fname);
       writeln('Output: ', fname);
     finally

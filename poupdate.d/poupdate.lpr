@@ -18,26 +18,15 @@ begin
     writeln('Updates empty msgstr from translations found in trans');
     writeln;
     writeln('usage:');
-    writeln(Format('  %s source[.po] trans[.po] [output[.po]]', [appName]));
+    writeln(Format('  %s source[.po] translations[.po] [output[.po]]', [appName]));
   end
   else begin
     SourcePo := TPoFile.Create(ParamFilename(1));
     try
-      writeln('Source 1: ', SourcePo.filename);
-      writeln('  Entries: ', SourcePo.count);
-      writeln('  Errors: ', SourcePo.ErrorCount);
-      writeln('  Fuzzys: ', SourcePo.FuzzyCount);
-      writeln('  Duplicate entities: ', SourcePo.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', SourcePo.DuplicateMsgidCount);
-
+      SourcePo.WriteStatistics('Source');
       TransPo := TPoFile.Create(ParamFilename(2));
       try
-        writeln('Source 2: ', TransPo.filename);
-        writeln('  Entries: ', TransPo.count);
-        writeln('  Errors: ', TransPo.ErrorCount);
-        writeln('  Fuzzys: ', TransPo.FuzzyCount);
-        writeln('  Duplicate entities: ', TransPo.DuplicateEntityCount);
-        writeln('  Duplicate msgid: ', TransPo.DuplicateMsgidCount);
+        TransPo.WriteStatistics('Translations');
         count := 0;
         for i := 0 to SourcePo.count-1 do begin
           //writeln(Format('dbg: MorePo[%d].entity="%s"', [i, TransPo[i].entity]));
@@ -60,20 +49,13 @@ begin
           else
             fname := SourcePo.Filename;
           if not SaveToBackup(fname) then
-            fname := RandomFilename(fname);
-          SaveToBackup(fname);
+            fname := UniqueFilename(fname);
           SourcePo.SaveToFile(fname);
           if count = 1 then
             writeln('One translation found')
           else
             writeln(Format('%d translations found', [count]));
-          SourcePo.UpdateCounts;
-          writeln('Output: ', fname);
-          writeln('  Entries: ', SourcePo.count);
-          writeln('  Errors: ', SourcePo.ErrorCount);
-          writeln('  Fuzzys: ', SourcePo.FuzzyCount);
-          writeln('  Duplicate entities: ', SourcePo.DuplicateEntityCount);
-          writeln('  Duplicate msgid: ', SourcePo.DuplicateMsgidCount);
+          SourcePo.WriteStatistics('Output');
         end;
       finally
         TransPo.free;

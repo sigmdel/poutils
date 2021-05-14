@@ -23,25 +23,27 @@ begin
   else begin
     PoFile := TPoFile.Create(ParamFilename(1));
     try
-      writeln('Source: ', PoFile.Filename);
-      writeln('  Entries: ', PoFile.count);
-      writeln('  Errors: ', PoFile.ErrorCount);
-      writeln('  Fuzzys: ', PoFile.FuzzyCount);
-      writeln('  Duplicate entities: ', PoFile.DuplicateEntityCount);
-      writeln('  Duplicate msgid: ', PoFile.DuplicateMsgidCount);
+      PoFile.WriteStatistics('Source');
+      if PoFile.count < 1 then
+        exit;
       for i := 0 to PoFile.count-1 do begin
         if (i = 0) and (PoFile[i].entity = '') then
           continue;
         PoFile[i].msgstr.Text := #$0A;
       end;
+      if PoFile[0].entity <> '' then
+        PoFile.Insert(0);
+      PoFile[0].msgid.text := #$0A;
+      PoFile[0].msgstr.clear;
+      PoFile[0].msgstr.add('Content-Type: text/plain; charset=UTF-8');
       if paramcount > 1 then
         fname := ParamFilename(2)
       else
         fname := PoFile.Filename;
       if not SaveToBackup(fname) then
-        fname := RandomFilename(fname);
+        fname := UniqueFilename(fname);
       PoFile.SaveToFile(fname);
-      writeln('Output: ', fname);
+      PoFile.WriteStatistics('Output');
     finally
       PoFile.free;
     end;
