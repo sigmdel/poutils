@@ -59,6 +59,8 @@ begin
             fname := ParamFilename(3)
           else
             fname := SourcePo.Filename;
+          if not SaveToBackup(fname) then
+            fname := RandomFilename(fname);
           SaveToBackup(fname);
           SourcePo.SaveToFile(fname);
           if count = 1 then

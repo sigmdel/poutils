@@ -4,7 +4,7 @@ Ten command line utilites to modify `.po` translation files used by Free Pascal 
 
 These tools are similar to utilities available for [GNU/Gettext](https://www.gnu.org/software/gettext/) and it's Delphi version [dxgettext](https://sourceforge.net/projects/dxgettext/) with the difference that they are adapted to the `.po` dialect used in Free Pascal / Lazarus.
 
-**Warning**: The author offers no guarantee of any sort with regard to these tools. However an effort has been made to avoid loosing any work. No file should ever be overwritten without first creating a backup.
+**Warning**: The author offers no guarantee of any sort with regard to these tools. However an effort has been made to avoid loosing any work. To that end, if a file is to be overwritten, an attempt is made to backup the original file.
 
 
 <!-- TOC -->

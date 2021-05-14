@@ -54,7 +54,8 @@ begin
       else
         fname := SourcePo.filename;
 
-      SaveToBackup(fname);
+      if not SaveToBackup(fname) then
+        fname := RandomFilename(fname);
       OutPo.SaveToFile(fname);
       OutPo.UpdateCounts;
       writeln('Output: ', fname);

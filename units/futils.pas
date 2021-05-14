@@ -18,8 +18,11 @@ function ParamFilename(index: integer): string;
 
   { If adds .bak, .bak1, .bak2 etc extention to filename
     until a non existing file is found. Then filename is
-    renamed to the given name.}
-function SaveToBackup(const filename: string): string;
+    renamed to that new name. Returns false if the file
+    could not be renamed, true otherwise}
+function SaveToBackup(const filename: string): boolean;
+
+function RandomFilename(const filename: string): string;
 
 implementation
 
@@ -36,22 +39,37 @@ begin
     result := result + '.po';
 end;
 
-function SaveToBackup(const filename: string): string;
+function SaveToBackup(const filename: string): boolean;
 var
   i: integer;
   fname: string;
+  stub: string;
 begin
-  result := filename + '.bak';
-  if fileexists(result) then begin
-    fname := result;
+  fname := filename + '.bak';
+  if fileexists(fname) then begin
+    stub := fname;
     i := 0;
     repeat
       inc(i);
-      result := fname + inttostr(i);
-    until not fileexists(result);
+      fname := stub + inttostr(i);
+    until not fileexists(fname);
   end;
-  renamefile(filename, result);
+  result := renamefile(filename, fname);
 end;
 
+function RandomFilename(const filename: string): string;
+var
+  ext, stub: string;
+begin
+  ext := extractfileext(filename);
+  stub := changefileext(filename, '');
+  repeat
+    result := Format('%s-%d%s', [stub, random(maxint), ext]);
+  until not fileexists(result);
+end;
+
+
+initialization
+  randomize;
 end.
 

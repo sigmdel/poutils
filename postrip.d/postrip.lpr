@@ -38,7 +38,8 @@ begin
         fname := ParamFilename(2)
       else
         fname := PoFile.Filename;
-      SaveToBackup(fname);
+      if not SaveToBackup(fname) then
+        fname := RandomFilename(fname);
       PoFile.SaveToFile(fname);
       writeln('Output: ', fname);
     finally

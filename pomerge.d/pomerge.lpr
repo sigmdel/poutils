@@ -87,7 +87,8 @@ begin
         else begin
           MorePo.UpdateCounts;
           fname := MorePo.Filename + '.conflicts';
-          SaveToBackup(fname);
+          if not SaveToBackup(fname) then
+            fname := RandomFilename(fname);
           MorePo.SaveToFile(fname);
           writeln('Conflicts: ', fname);
           writeln('  Entries: ', MorePo.count);
