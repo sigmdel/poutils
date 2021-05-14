@@ -16,13 +16,16 @@ function AppName: string;
     the a .po extension is added and that is returned}
 function ParamFilename(index: integer): string;
 
-  { If adds .bak, .bak1, .bak2 etc extention to filename
-    until a non existing file is found. Then filename is
-    renamed to that new name. Returns false if the file
-    could not be renamed, true otherwise}
+  { If filename exists, then adds .bak, .bak1, .bak2, etc extention
+    to the filename until a non existing file is found. Then filename is
+    renamed to that new name. Returns false should renaming the file not
+    work or true otherwise (including when filename does not exist)}
 function SaveToBackup(const filename: string): boolean;
 
-function RandomFilename(const filename: string): string;
+  { Returns filename if it does not exist, otherwise returns filenameXXXX
+    where XXXX are random digits chosen so that this new name does not
+    exits.}
+function UniqueFilename(const filename: string): string;
 
 implementation
 
@@ -45,27 +48,32 @@ var
   fname: string;
   stub: string;
 begin
-  fname := filename + '.bak';
-  if fileexists(fname) then begin
+  result := true;
+  if fileexists(filename) then begin
+    fname := filename + '.bak';
     stub := fname;
     i := 0;
-    repeat
+    while fileexists(fname) do begin
       inc(i);
       fname := stub + inttostr(i);
-    until not fileexists(fname);
+    end;
+    result := renamefile(filename, fname);
   end;
-  result := renamefile(filename, fname);
 end;
 
-function RandomFilename(const filename: string): string;
+function UniqueFilename(const filename: string): string;
 var
   ext, stub: string;
+  i: integer;
 begin
   ext := extractfileext(filename);
   stub := changefileext(filename, '');
-  repeat
-    result := Format('%s-%d%s', [stub, random(maxint), ext]);
-  until not fileexists(result);
+  i := 0;
+  result := filename;
+  while fileexists(result) do begin
+    inc(i);
+    result := Format('%s-%d%s', [stub, i, ext]);
+  end;
 end;
 
 
