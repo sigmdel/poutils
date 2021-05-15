@@ -23,7 +23,7 @@ type
     msgstr: TStrings;    // msgstr "xx"
     altmsgid: TStrings;  // #| msgid "xx"
     procedure Assign(source: TPoEntry);
-    function Equals(source: TPoEntry): boolean; // hides TObjec.Equals(Obj: TObject) - that's ok
+    function isEqual(source: TPoEntry): boolean;
     constructor create;
     destructor destroy; override;
     function HasMsgid: boolean;
@@ -45,8 +45,8 @@ type
     FDuplicateMsgidCount: integer;
     FDuplicateMsgstrCount: integer;
     function foundEntity(const value: string; lastIndex: integer): integer;
-    function foundMsgid(const value: string; lastIndex: integer): integer;
-    function foundMsgstr(const value: string; lastIndex: integer): integer;
+    function foundMsgid(const value: TStrings; lastIndex: integer): integer;
+    function foundMsgstr(const value: TStrings; lastIndex: integer): integer;
     function GetCount: integer;
     function GetEntry(index: integer): TPoEntry;
     procedure LoadFile;
@@ -63,7 +63,7 @@ type
     procedure Clear;
     procedure Delete(index: integer);
 
-    function IndexOfMsgid(const value: string): integer;
+    function IndexOfMsgid(const value: TStrings): integer;
 
       { Searches all Items[i], i=0,...,index-1 and returns the
         index of item equal to Items[index] }
@@ -75,18 +75,50 @@ type
 
       { Inserts a blank TPoEntry at the specified position}
     function Insert(index: integer): TPoEntry;
+
+      { Save the Entries to a text file of the given name. If the trimmed
+        aFilename is empty, the procedure does nothing. If the Filename
+        property is blank then it is set to aFilename without calling LoadFile.}
     procedure SaveToFile(const aFilename: string);
+
+      { Alphabetically sorts the Entries according to their entity }
     procedure Sort;
+
+      { Updates counts and writes summary statistics }
     procedure WriteStatistics(const filelabel: string);
+
+      { Number of Entries }
     property count: integer read GetCount;
+
+      { Number of errors encountered in the LoadFile method }
     property ErrorCount: integer read FErrorCount;
+
+      { Number of Entries with the fuzzy attribute }
     property FuzzyCount: integer read FFuzzyCount;
+
+      { Number of Entries with an alternate msgid }
     property AltMsgidCount: integer read FAltMsgidCount;
+
+      { Number of Entries that have a duplicate entity }
     property DuplicateEntityCount: integer read FDuplicateEntityCount;
+
+      { Number of Entries that have a msgId in an other entry. Empty msgid are ignored }
     property DuplicateMsgidCount: integer read FDuplicateMsgidCount;
+
+      { Number of Entries that have a msgstr in an other entry. Empty msgst are ignored }
     property DuplicateMsgstrCount: integer read FDuplicateMsgstrCount;
+
+      { Flag that determines if LoadFile is verbose or not. By default this
+        is false, so the constructor create(aFilename) do not report parsing
+        errors to the standard output }
     property ReportError: boolean read FReportError write FReportError;
+
+      { Array of all TPoEntry found in the file }
     property Entries[index: integer]: TPoEntry read GetEntry; default;
+
+      { Name of file containing the source of the object. It is set explicitely
+        with the assignment Filename := aFilename implicetly with the
+        constructor create(aFilename). In both cases the  or explicitely}
     property Filename: string read FFilename write SetFilename;
   end;
 
@@ -126,10 +158,10 @@ begin
   altmsgid.assign(source.altmsgid);
 end;
 
-function TPoEntry.Equals(source: TPoEntry): boolean;
+function TPoEntry.isEqual(source: TPoEntry): boolean;
 begin
-  result := (entity = source.entity) and (msgid.text = source.msgid.text)
-    and (msgstr.text = source.msgstr.text)
+  result := (entity = source.entity) and msgid.Equals(source.msgid)
+    and msgstr.Equals(source.msgstr)
 end;
 
 function TPoEntry.HasAltmsgid: boolean;
@@ -144,7 +176,7 @@ end;
 
 function TPoEntry.HasMsgstr: boolean;
 begin
-  result := msgstr.Count > 0;
+  result := ((msgstr.Count = 1) and ( msgstr[0] <> '')) or (msgstr.Count > 1);
 end;
 
 
@@ -223,7 +255,7 @@ var
   i: integer;
 begin
   for i := 0 to index-1 do begin
-    if Entries[i].Equals(Entries[Index]) then begin
+    if Entries[i].isEqual(Entries[Index]) then begin
       result := i;
       exit;
     end;
@@ -243,31 +275,28 @@ begin
   result := -1;
 end;
 
-function TPoFile.FoundMsgid(const value: string; lastIndex: integer): integer;
+function TPoFile.FoundMsgid(const value: TStrings; lastIndex: integer): integer;
 var
   i: integer;
 begin
   for i := 0 to lastIndex-1 do
-    if TPoEntry(FList[i]).msgid.text = value then begin
+    if Entries[i].msgid.Equals(value) then begin
       result := i;
       exit;
     end;
   result := -1;
 end;
 
-function TPoFile.FoundMsgstr(const value: string; lastIndex: integer): integer;
+function TPoFile.FoundMsgstr(const value: TStrings; lastIndex: integer): integer;
 var
   i: integer;
 begin
-  result := -1;
-  //writeln(Format('dbc: to %d with value <%s>', [lastIndex, value]));
-  if (value = #$0A) or (value = '') or (value = '""') then  // really on 1st can occur
-    exit;
   for i := 0 to lastIndex-1 do
-    if TPoEntry(FList[i]).msgstr.text = value then begin
+    if Entries[i].msgstr.Equals(value) then begin
       result := i;
       exit;
     end;
+  result := -1;
 end;
 
 function TPoFile.GetCount: integer;
@@ -285,7 +314,7 @@ begin
   result := FoundEntity(value, Count);
 end;
 
-function TPoFile.IndexOfMsgid(const value: string): integer;
+function TPoFile.IndexOfMsgid(const value: TStrings): integer;
 begin
   result := FoundMsgId(value, count);
 end;
@@ -372,15 +401,27 @@ var
 
   procedure CheckEntry(n: integer);
   begin
-    with Entries[n] do begin
+    if (n = 0) and (Entries[0].Entity = '') then with Entries[0] do begin
+      if HasMsgid then begin
+        inc(FErrorCount);
+        Report('Entry 0 with no entity has an msgid');
+      end;
+      if not HasMsgstr then begin
+        inc(FErrorCount);
+        Report('Entry 0 with no entity does not have a msgstr');
+      end;
+    end
+    else with Entries[n] do begin
       if not HasMsgid then begin
         inc(FErrorCount);
         Report(Format('Entry %d (%s) does not have a msgid', [n, Entity]));
       end;
+      (*
       if not HasMsgstr then begin
         inc(FErrorCount);
         Report(Format('Entry %d (%s) does not have a msgstr', [n, Entity]));
       end;
+      *)
     end;
   end;
 
@@ -412,7 +453,7 @@ var
 
   procedure ReadEntity;
   begin
-    if count > 1 then
+    if count > 0 then
       CheckEntry(count-1);
     system.delete(currentLine, 1, 2);
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
@@ -641,7 +682,10 @@ var
   dst: Textfile;
   i,j: integer;
 begin
-  assign(dst, aFilename);
+  if trim(aFilename) = '' then exit;
+  if FFilename = '' then
+    FFilename := trim(aFilename);
+  assign(dst, trim(aFilename));
   try
     rewrite(dst);
     for i := 0 to Count-1 do
@@ -655,14 +699,14 @@ begin
         if isFuzzy then
           writeln(dst, '#, fuzzy');
 
+        if msgctxt <> '' then
+          writeln(dst, 'msgctxt "', msgctxt, '"');
+
         if (altmsgid.Count > 0) then begin
           writeln(dst, '#| msgid "', altmsgid[0], '"');
           for j := 1 to altmsgid.count-1 do
             writeln(dst, '"', altmsgid[j], '"');
         end;
-
-        if msgctxt <> '' then
-          writeln(dst, 'msgctxt "', msgctxt, '"');
 
         if (msgid.count = 0) then
           writeln(dst, 'msgid ""')
@@ -696,15 +740,21 @@ procedure TPoFile.SetFilename(const aFilename: string);
 begin
   if AnsiCompareFilename(aFilename, FFilename) = 0 then exit;
   FFilename := aFilename;
-  if FFilename = '' then
-    Clear
-  else
+  Clear;
+  if FFilename <> '' then
     LoadFile
 end;
 
 procedure TPoFile.Sort;
+var
+  first: integer;
 begin
-  QuickSort(1, FList.Count-1);
+  if Count < 2 then exit;
+  if (Entries[0].entity = '') then
+    first := 1
+  else
+    first := 0;
+  QuickSort(first, FList.Count-1);
 end;
 
 procedure TPoFile.WriteStatistics(const FileLabel: string);
@@ -722,17 +772,24 @@ end;
 
 procedure TPoFile.UpdateCounts;
 var
-  i: integer;
+  first, i: integer;
+
 begin
   FFuzzyCount := 0;
   FDuplicateEntityCount := 0;
   FDuplicateMsgidCount := 0;
   FDuplicateMsgstrCount := 0;
   FAltMsgidCount := 0;
-  for i := 0 to Count-1 do begin
+  if Count > 0 then begin
+    if Entries[0].entity = '' then
+      first := 1
+    else
+      first := 0;
+  end;
+  for i := first to Count-1 do begin
     Entries[i].hasDuplicateEntity := foundEntity(Entries[i].entity, i) >= 0;
-    Entries[i].hasDuplicateMsgId := foundMsgId(Entries[i].msgid.text , i) >= 0;
-    Entries[i].hasDuplicateMsgstr := foundMsgstr(Entries[i].msgstr.text , i) >= 0;
+    Entries[i].hasDuplicateMsgId := Entries[i].HasMsgid and (foundMsgId(Entries[i].msgid, i) >= 0);
+    Entries[i].hasDuplicateMsgstr := Entries[i].HasMsgstr and (foundMsgstr(Entries[i].msgstr, i) >= 0);
     if Entries[i].isFuzzy then
       inc(FFuzzyCount);
     if Entries[i].hasAltMsgid then
