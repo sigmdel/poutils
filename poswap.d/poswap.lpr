@@ -26,9 +26,7 @@ begin
     try
       PoFile.WriteStatistics('Source');
       for i := 0 to PoFile.count-1 do begin
-        if (i = 0) and (PoFile[i].entity = '') then
-          continue;
-        if (Pofile[i].msgstr.count = 0) or (Pofile[i].msgstr.text = #$0A) then
+        if not PoFile[i].hasMsgid then
           continue;
         swap := PoFile[i].msgstr.Text;
         PoFile[i].msgstr.Text := PoFile[i].msgid.Text;

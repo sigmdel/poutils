@@ -25,10 +25,9 @@ begin
     try
       PoFile.WriteStatistics('Source');
       for i := 0 to PoFile.count-1 do begin
-        if (i = 0) and (PoFile[i].entity = '') then
+        if (i = 0) and (PoFile[i].entity = '') or PoFile[i].hasMsgstr then
           continue;
-        if (Pofile[i].msgstr.Count = 0) or (PoFile[i].msgstr.Text = #$0A) then
-          PoFile[i].msgstr.Text := PoFile[i].msgid.Text;
+        PoFile[i].msgstr.assign(PoFile[i].msgid);
       end;
       if paramcount > 1 then
         fname := ParamFilename(2)
