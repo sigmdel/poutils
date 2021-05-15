@@ -173,4 +173,4 @@ Such an entry will not be altered.
 Updates empty `msgstr` in a `.po` file from translations found in another `.po` file
 
     usage:
-        poupdate source[.po] trans[.po] [output[.po]]
+        poupdate source[.po] translations[.po] [output[.po]]
