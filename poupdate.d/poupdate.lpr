@@ -29,15 +29,16 @@ begin
         TransPo.WriteStatistics('Translations');
         count := 0;
         for i := 0 to SourcePo.count-1 do begin
-          //writeln(Format('dbg: MorePo[%d].entity="%s"', [i, TransPo[i].entity]));
           if (i = 0) and (SourcePo[i].Entity = '') then
             continue;
-          if (SourcePo[i].msgstr.text = #$0A) or (SourcePo[i].msgstr.text = '') or (SourcePo[i].msgstr.count = 0) then begin
-             n := TransPo.IndexOfMsgid(SourcePo[i].msgId.Text);
-             if n >= 0 then begin
-               SourcePo[i].msgstr.text := TransPo[n].msgstr.text;
-               inc(count);
-             end;
+          if SourcePo[i].hasMsgstr then
+            continue;
+          if not SourcePo[i].hasMsgid then
+            continue;
+          n := TransPo.IndexOfMsgid(SourcePo[i].msgid);
+          if n >= 0 then begin
+            SourcePo[i].msgstr.assign(TransPo[n].msgstr);
+            inc(count);
           end;
         end;
 
