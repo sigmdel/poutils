@@ -29,13 +29,18 @@ begin
       for i := 0 to PoFile.count-1 do begin
         if (i = 0) and (PoFile[i].entity = '') then
           continue;
-        PoFile[i].msgstr.Text := #$0A;
+        PoFile[i].msgstr.Clear;
+        PoFile[i].msgstr.add('');
       end;
+      // add initial Content-Type translation if needed
       if PoFile[0].entity <> '' then
         PoFile.Insert(0);
-      PoFile[0].msgid.text := #$0A;
-      PoFile[0].msgstr.clear;
-      PoFile[0].msgstr.add('Content-Type: text/plain; charset=UTF-8');
+      with PoFile[0] do begin
+        msgid.clear;
+        msgstr.clear;
+        msgid.add('');
+        msgstr.add('Content-Type: text/plain; charset=UTF-8');
+      end;
       if paramcount > 1 then
         fname := ParamFilename(2)
       else
