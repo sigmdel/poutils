@@ -44,6 +44,7 @@ type
     FDuplicateEntityCount: integer;
     FDuplicateMsgidCount: integer;
     FDuplicateMsgstrCount: integer;
+  protected
     function foundEntity(const value: string; lastIndex: integer): integer;
     function foundMsgid(const value: TStrings; lastIndex: integer): integer;
     function foundMsgstr(const value: TStrings; lastIndex: integer): integer;
@@ -699,14 +700,14 @@ begin
         if isFuzzy then
           writeln(dst, '#, fuzzy');
 
-        if msgctxt <> '' then
-          writeln(dst, 'msgctxt "', msgctxt, '"');
-
         if (altmsgid.Count > 0) then begin
           writeln(dst, '#| msgid "', altmsgid[0], '"');
           for j := 1 to altmsgid.count-1 do
-            writeln(dst, '"', altmsgid[j], '"');
+            writeln(dst, '#| "', altmsgid[j], '"');
         end;
+
+        if msgctxt <> '' then
+          writeln(dst, 'msgctxt "', msgctxt, '"');
 
         if (msgid.count = 0) then
           writeln(dst, 'msgid ""')

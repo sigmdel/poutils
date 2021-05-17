@@ -1,0 +1,34 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: stringres.sfalse
+msgid "false"
+msgstr ""
+
+#: stringres.sok
+msgid "OK"
+msgstr ""
+
+#: stringres.spagenames
+msgid ""
+"Broker\n"
+"Security\n"
+"Encryption\n"
+"Publish Topic\n"
+"Subscribe Topics\n"
+msgstr ""
+
+#: stringres.sqos
+msgid "Quality of Service"
+msgstr ""
+
+#: tmainform.label3.caption
+msgctxt "tmainform.label3.caption"
+msgid "Topic"
+msgstr ""
+
+#: tmainform.label4.caption
+msgctxt "tmainform.label4.caption"
+msgid "Payload"
+msgstr ""
+

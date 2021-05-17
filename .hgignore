@@ -23,6 +23,7 @@ posort
 postrip
 poswap
 poupdate
+pofilesunittest
 
 *.po
 

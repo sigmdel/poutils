@@ -1,0 +1,48 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Project-Id-Version: \n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr_FR\n"
+
+#: stringres.sok
+msgctxt "stringres.sok"
+msgid "OK"
+msgstr "Ok"
+
+#: stringres.spagenames
+#, fuzzy
+#| msgid ""
+#| "-Broker\n"
+#| "-Security\n"
+msgctxt "stringres.spangenames"
+msgid ""
+"Broker\n"
+"Security\n"
+"Encryption\n"
+"Publish Topic\n"
+"Subscribe Topics\n"
+msgstr ""
+"Agent\n"
+"Sécurité\n"
+"Cryptage\n"
+"Sujet publié\n"
+"Sujets souscris\n"
+
+#: stringres.sqos
+msgid "Quality of Service"
+msgstr "Qualité du serviced"
+
+#: tmainform.connectbutton.caption
+#, fuzzy
+msgctxt "tmainform.connectbutton.caption"
+msgid "Disconnect"
+msgstr "Déconnecter"
+
+#: tform1.button1.caption
+#, fuzzy
+#| msgid "Close"
+msgid "&Close"
+msgstr "Exit"
