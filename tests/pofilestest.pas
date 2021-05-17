@@ -23,6 +23,8 @@ type
     procedure TestUpdateCountOnEmptyFile;
     procedure TestLoadOkSimpleFile;
     procedure TestLoadOkComplexFile;
+    procedure TestSaveOkSimpleFile;
+    procedure TestSaveOkComplexFile;
   end;
 
 implementation
@@ -105,6 +107,67 @@ begin
   PoFile.SaveToFile('out.po');
 end;
 
+procedure TTestPofiles.TestSaveOkSimpleFile;
+const
+  tempfilename = 'ok_simple_saved.po';
+var
+  source: TStrings;
+  copy: TStrings;
+begin
+  PoFile.Filename := 'ok_simple.po.test';
+  AssertEquals('Count:', 7, PoFile.Count);
+  PoFile.SaveToFile(tempfilename);
+  copy := TStringList.create;
+  try
+    source := TStringList.create;
+    try
+      copy.loadFromFile(tempfilename);
+      source.loadFromFile('ok_simple.po.test');
+      // get rid of trailing empty lines
+      while copy[copy.count-1] = '' do
+        copy.delete(copy.count-1);
+      while source[source.count-1] = '' do
+        source.delete(source.count-1);
+      AssertTrue('copy = source', copy.Equals(source));
+    finally
+      source.free;
+    end;
+  finally
+    copy.free;
+    deletefile(tempfilename);
+  end;
+end;
+
+procedure TTestPofiles.TestSaveOkComplexFile;
+const
+  tempfilename = 'ok_complex_saved.po';
+var
+  source: TStrings;
+  copy: TStrings;
+begin
+  PoFile.Filename := 'ok_complex.po.test';
+  AssertEquals('Count:', 6, PoFile.Count);
+  PoFile.SaveToFile(tempfilename);
+  copy := TStringList.create;
+  try
+    source := TStringList.create;
+    try
+      copy.loadFromFile(tempfilename);
+      source.loadFromFile('ok_complex.po.test');
+      // get rid of trailing empty lines
+      while copy[copy.count-1] = '' do
+        copy.delete(copy.count-1);
+      while source[source.count-1] = '' do
+        source.delete(source.count-1);
+      AssertTrue('copy = source', copy.Equals(source));
+    finally
+      source.free;
+    end;
+  finally
+    copy.free;
+    deletefile(tempfilename);
+  end;
+end;
 
 initialization
   RegisterTest(TTestPofiles);
