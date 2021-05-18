@@ -11,7 +11,7 @@ uses
 var
   SourcePo, MorePo: TPoFile;
   fname: string;
-  i, n: integer;
+  i, first, n: integer;
 
 begin
   if (paramcount < 2) or (paramcount > 3) then begin
@@ -28,11 +28,13 @@ begin
       try
         MorePo.WriteStatistics('More');
 
-        for i := MorePo.count-1 downto 0 do begin
+        if MorePo.HasHeader then
+          first := 1
+        else
+          first := 0;
+        for i := MorePo.count-1 downto first do begin
           //writeln(Format('dbg: MorePo[%d].entity="%s"', [i, MorePo[i].entity]));
-          if (i = 0) and (MorePo[i].Entity = '') then
-            continue;
-          n := SourcePo.indexofEntity(MorePo[i].Entity);
+          n := SourcePo.indexofReference(MorePo[i].Reference);
           if n >= 0 then begin
             //writeln(Format('dbg: found SourcePo[%d].entity="%s"', [n, SourcePo[n].entity]));
             if SourcePo[n].Equals(MorePo[i]) then begin
@@ -51,6 +53,13 @@ begin
           end;
         end;
 
+        if (first > 0) and not SourcePo.HasHeader then begin
+          SourcePo.Insert(0).Assign(MorePo[0]);
+          MorePo.Delete(0);
+        end
+        else if (first > 0) and SourcePo.HasHeader and SourcePo[0].msgstr.Equals(MorePo[0].msgstr) then
+          MorePo.Delete(0);
+
         // Now SourcePo has all its original entries plus all different MorePo
         // entries, while MorePo contains all of its original entries less
         // all those copied into SourcePo. In other words, MorePo contains
@@ -65,7 +74,7 @@ begin
         SourcePo.SaveToFile(fname);
         SourcePo.WriteStatistics('Output');
 
-        If (MorePo.Count = 0) or ((MorePo.Count = 1) and (MorePo[0].entity = '') ) then
+        If (MorePo.Count = 0) then
           writeln('No conflicting entries')
         else begin
           fname := MorePo.Filename + '.conflicts';

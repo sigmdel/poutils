@@ -11,7 +11,7 @@ uses
 var
   PoFile: TPoFile;
   fname: string;
-  i: integer;
+  i, first: integer;
 
 begin
   if (paramcount < 1) or (paramcount > 2) then begin
@@ -24,10 +24,13 @@ begin
     PoFile := TPoFile.Create(ParamFilename(1));
     try
       PoFile.WriteStatistics('Source');
-      for i := 0 to PoFile.count-1 do begin
-        if (i = 0) and (PoFile[i].entity = '') or PoFile[i].hasMsgstr then
-          continue;
-        PoFile[i].msgstr.assign(PoFile[i].msgid);
+      if  PoFile.HasHeader then
+        first := 1
+      else
+        first := 0;
+      for i := first to PoFile.count-1 do begin
+        if not PoFile[i].hasMsgstr then
+          PoFile[i].msgstr.assign(PoFile[i].msgid);
       end;
       if paramcount > 1 then
         fname := ParamFilename(2)

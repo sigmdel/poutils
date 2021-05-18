@@ -11,12 +11,12 @@ uses
 var
   SourcePo, RemovePo, OutPo: TPoFile;
   fname: string;
-  i: integer;
+  i, first: integer;
 
 begin
   writeln;
   if (paramcount < 2) or (paramcount > 3) then begin
-    writeln('Removes all entries found in a remove .po file from a source .po file');
+    writeln('Removes from a source .po file all entries with a reference found in a remove .po file');
     writeln;
     writeln('usage:');
     writeln(Format('  %s source[.po] remove[.po] [output[.po]]', [appName]));
@@ -30,8 +30,14 @@ begin
     try
       SourcePo.WriteStatistics('Source');
       RemovePo.WriteStatistics('Remove');
-      for i := 0 to SourcePo.count-1 do begin
-        if ((i = 0) and (SourcePo[i].entity = '')) or (RemovePo.IndexOfEntity(SourcePo[i].Entity) < 0) then
+      if SourcePo.HasHeader then begin
+        OutPo.Insert(OutPo.count).Assign(SourcePo[0]);
+        first := 1
+      end
+      else
+        first := 0;
+      for i := first to SourcePo.count-1 do begin
+        if (RemovePo.IndexOfReference(SourcePo[i].Reference) < 0) then
           OutPo.Insert(OutPo.count).Assign(SourcePo[i]);
       end;
 

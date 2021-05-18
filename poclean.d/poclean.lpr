@@ -15,7 +15,7 @@ var
 
 begin
   if (paramcount < 1) or (paramcount > 2) then begin
-    writeln('Removes duplicate entries in a po file');
+    writeln('Removes entries with duplicate references, msgid and msgstr in a po file');
     writeln;
     writeln('usage:');
     writeln(Format('  %s source[.po] [output[.po]]', [appName]));
@@ -25,9 +25,9 @@ begin
     try
       PoFile.WriteStatistics('Source');
       count := 0;
-      if (poFile.DuplicateEntityCount > 0) then begin
+      if (poFile.DuplicateReferenceCount > 0) then begin
         for i := PoFile.Count-1 downto 0 do begin
-          if PoFile[i].hasDuplicateEntity and (PoFile.FindDuplicateEntry(i) >= 0) then begin
+          if PoFile[i].HasDuplicateReference and (PoFile.FindDuplicateEntry(i) >= 0) then begin
             PoFile.delete(i);
             inc(count);
           end;

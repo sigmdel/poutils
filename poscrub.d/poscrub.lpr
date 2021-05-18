@@ -25,26 +25,24 @@ begin
     try
       PoFile.WriteStatistics('Source');
       count := 0;
-      if (poFile.DuplicateEntityCount > 0) then begin
+      if (poFile.DuplicateReferenceCount > 0) then begin
         for i := PoFile.Count-1 downto 0 do begin
-          if PoFile[i].hasDuplicateEntity and (PoFile.FindDuplicateEntry(i) >= 0) then begin
+          if PoFile[i].HasDuplicateReference and (PoFile.FindDuplicateEntry(i) >= 0) then begin
             PoFile.delete(i);
             inc(count);
+          end
+          else begin
+            if PoFile[i].IsFuzzy then begin
+              PoFile[i].IsFuzzy := false;
+              inc(count);
+            end;
+            if (PoFile[i].HasPrevmsgid) then begin
+              PoFile[i].prevmsgid.clear;
+              inc(count);
+            end;
           end;
         end;
       end;
-
-      for i := 0 to PoFile.Count-1 do begin
-        if PoFile[i].isFuzzy then begin
-          PoFile[i].isFuzzy := false;
-          inc(count);
-        end;
-        if (PoFile[i].altmsgid.count > 0) then begin
-          PoFile[i].altmsgid.clear;
-          inc(count);
-        end;
-      end;
-
       if count < 1 then
         writeln('No changes')
       else begin

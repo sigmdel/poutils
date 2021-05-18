@@ -29,19 +29,21 @@ begin
       PoFile.WriteStatistics('Source');
       with PoFile do begin
         for i := 0 to Count-1 do with Entries[i] do begin
-          if isFuzzy or hasAltmsgid or hasDuplicateEntity
-          or hasDuplicateMsgId or hasDuplicateMsgstr then
+          if IsFuzzy or HasPrevmsgid or HasDuplicateReference
+          or HasDuplicateMsgid or HasDuplicateMsgstr then
             writeln;
-          if isFuzzy then
-            writeln(Format('Entry %d (%s) is fuzzy', [i, entity]));
-          if hasAltmsgid then
-            writeln(Format('Entry %d (%s) has an alternate msgid', [i, entity]));
-          if hasDuplicateEntity then
-            writeln(Format('Entry %d (%s) has a duplicate entity', [i, entity]));
-          if hasDuplicateMsgid then
-            writeln(Format('Entry %d (%s) has a duplicate msgid', [i, entity]));
-          if hasDuplicateMsgstr then
-            writeln(Format('Entry %d (%s) has a duplicate msgstr', [i, entity]));
+          if IsAmbiguous then
+            writeln(Format('Entry %d (%s) is ambiguous', [i, Reference]));
+          if HasDuplicateMsgid then
+            writeln(Format('Entry %d (%s) has a duplicate msgid', [i, Reference]));
+          if HasDuplicateMsgstr then
+            writeln(Format('Entry %d (%s) has a duplicate msgstr', [i, Reference]));
+          if IsFuzzy then
+            writeln(Format('Entry %d (%s) is fuzzy', [i, Reference]));
+          if HasPrevmsgid then
+            writeln(Format('Entry %d (%s) has a previous msgid', [i, Reference]));
+          if HasDuplicateReference then
+            writeln(Format('Entry %d (%s) has a duplicate reference', [i, Reference]));
         end;
       end;
 

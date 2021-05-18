@@ -11,7 +11,7 @@ uses
 var
   SourcePo, TransPo: TPoFile;
   fname: string;
-  i, n, count: integer;
+  i, first, n, count: integer;
 
 begin
   if (paramcount < 2) or (paramcount > 3) then begin
@@ -28,9 +28,11 @@ begin
       try
         TransPo.WriteStatistics('Translations');
         count := 0;
-        for i := 0 to SourcePo.count-1 do begin
-          if (i = 0) and (SourcePo[i].Entity = '') then
-            continue;
+        if SourcePo.HasHeader then
+          first := 1
+        else
+          first := 0;
+        for i := first to SourcePo.count-1 do begin
           if SourcePo[i].hasMsgstr then
             continue;
           if not SourcePo[i].hasMsgid then

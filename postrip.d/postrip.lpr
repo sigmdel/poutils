@@ -26,14 +26,8 @@ begin
       PoFile.WriteStatistics('Source');
       if PoFile.count < 1 then
         exit;
-      for i := 0 to PoFile.count-1 do begin
-        if (i = 0) and (PoFile[i].entity = '') then
-          continue;
-        PoFile[i].msgstr.Clear;
-        PoFile[i].msgstr.add('');
-      end;
-      // add initial Content-Type translation if needed
-      if PoFile[0].entity <> '' then
+
+      if not PoFile.HasHeader then
         PoFile.Insert(0);
       with PoFile[0] do begin
         msgid.clear;
@@ -41,6 +35,12 @@ begin
         msgid.add('');
         msgstr.add('Content-Type: text/plain; charset=UTF-8');
       end;
+
+      for i := 1 to PoFile.count-1 do begin
+        PoFile[i].msgstr.Clear;
+        PoFile[i].msgstr.add('');
+      end;
+
       if paramcount > 1 then
         fname := ParamFilename(2)
       else
