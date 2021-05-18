@@ -44,9 +44,13 @@ procedure TTestPofiles.TestConstructor;
 begin
   AssertEquals('Count:', 0, PoFile.Count);
   AssertEquals('ErrorCount', -1, PoFile.ErrorCount);
+  AssertEquals('AmbiguousCount', -1, PoFile.AmbiguousCount);
   AssertEquals('FuzzyCount', -1, PoFile.FuzzyCount);
-  AssertEquals('AltMsgidCount', -1, PoFile.AltMsgidCount);
-  AssertEquals('DuplicateEntityCount', -1, PoFile.DuplicateEntityCount);
+  AssertEquals('EmptyMsgidCount', -1, PoFile.EmptyMsgidCount);
+  AssertEquals('EmptyMsgstgrCount', -1, PoFile.EmptyMsgstrCount);
+  AssertEquals('PrevMsgidCount', -1, PoFile.PrevMsgidCount);
+  AssertEquals('MissingReferenceCount', -1, PoFile.MissingReferenceCount);
+  AssertEquals('DuplicateReferenceCount', -1, PoFile.DuplicateReferenceCount);
   AssertEquals('DuplicateMsgidCount', -1, PoFile.DuplicateMsgidCount);
   AssertEquals('DuplicateMsgstrCount', -1, PoFile.DuplicateMsgstrCount);
 end;
@@ -56,9 +60,13 @@ begin
   PoFile.UpdateCounts;
   AssertEquals('Count:', 0, PoFile.Count);
   AssertEquals('ErrorCount', -1, PoFile.ErrorCount);
+  AssertEquals('AmbiguousCount', 0, PoFile.AmbiguousCount);
   AssertEquals('FuzzyCount', 0, PoFile.FuzzyCount);
-  AssertEquals('AltMsgidCount', 0, PoFile.AltMsgidCount);
-  AssertEquals('DuplicateEntityCount', 0, PoFile.DuplicateEntityCount);
+  AssertEquals('EmptyMsgidCount', 0, PoFile.EmptyMsgidCount);
+  AssertEquals('EmptyMsgstgrCount', 0, PoFile.EmptyMsgstrCount);
+  AssertEquals('PrevMsgidCount', 0, PoFile.PrevMsgidCount);
+  AssertEquals('MissingReferenceCount', 0, PoFile.MissingReferenceCount);
+  AssertEquals('DuplicateReferenceCount', 0, PoFile.DuplicateReferenceCount);
   AssertEquals('DuplicateMsgidCount', 0, PoFile.DuplicateMsgidCount);
   AssertEquals('DuplicateMsgstrCount', 0, PoFile.DuplicateMsgstrCount);
 end;
@@ -71,9 +79,13 @@ begin
   AssertEquals('Count:', 7, PoFile.Count);
   AssertEquals('ErrorCount', 0, PoFile.ErrorCount);
   PoFile.UpdateCounts;
+  AssertEquals('AmbiguousCount', 0, PoFile.AmbiguousCount);
   AssertEquals('FuzzyCount', 0, PoFile.FuzzyCount);
-  AssertEquals('AltMsgidCount', 0, PoFile.AltMsgidCount);
-  AssertEquals('DuplicateEntityCount', 0, PoFile.DuplicateEntityCount);
+  AssertEquals('EmptyMsgidCount', 0, PoFile.EmptyMsgidCount);
+  AssertEquals('EmptyMsgstgrCount', 6, PoFile.EmptyMsgstrCount);
+  AssertEquals('PrevMsgidCount', 0, PoFile.PrevMsgidCount);
+  AssertEquals('MissingReferenceCount', 0, PoFile.MissingReferenceCount);
+  AssertEquals('DuplicateReferenceCount', 0, PoFile.DuplicateReferenceCount);
   AssertEquals('DuplicateMsgidCount', 0, PoFile.DuplicateMsgidCount);
   AssertEquals('DuplicateMsgstrCount', 0, PoFile.DuplicateMsgstrCount);
 end;
@@ -88,9 +100,13 @@ begin
   AssertEquals('Count:', 6, PoFile.Count);
   AssertEquals('ErrorCount', 0, PoFile.ErrorCount);
   PoFile.UpdateCounts;
+  AssertEquals('AmbiguousCount', 0, PoFile.AmbiguousCount);
   AssertEquals('FuzzyCount', 3, PoFile.FuzzyCount);
-  AssertEquals('AltMsgidCount', 2, PoFile.AltMsgidCount);
-  AssertEquals('DuplicateEntityCount', 0, PoFile.DuplicateEntityCount);
+  AssertEquals('EmptyMsgidCount', 0, PoFile.EmptyMsgidCount);
+  AssertEquals('EmptyMsgstgrCount', 0, PoFile.EmptyMsgstrCount);
+  AssertEquals('PrevMsgidCount', 2, PoFile.PrevMsgidCount);
+  AssertEquals('MissingReferenceCount', 0, PoFile.MissingReferenceCount);
+  AssertEquals('DuplicateReferenceCount', 0, PoFile.DuplicateReferenceCount);
   AssertEquals('DuplicateMsgidCount', 0, PoFile.DuplicateMsgidCount);
   AssertEquals('DuplicateMsgstrCount', 0, PoFile.DuplicateMsgstrCount);
 
@@ -99,8 +115,8 @@ begin
     sl.add('');
     sl.add('-Broker\n');
     sl.add('-Security\n');
-    AssertEquals('Altmsg', sl.text, PoFile[2].altmsgid.text);
-    AssertTrue('Altmsgid[2]', PoFile[2].altmsgid.Equals(sl));
+    AssertEquals('Altmsg', sl.text, PoFile[2].prevmsgid.text);
+    AssertTrue('Altmsgid[2]', PoFile[2].prevmsgid.Equals(sl));
   finally
     freeandnil(sl);
   end;
