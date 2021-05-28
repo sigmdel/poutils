@@ -1,11 +1,23 @@
 # Free Pascal / Lazarus Po Files Utilities
 
-Eleven command line utilities to modify `.po` translation files used by Free Pascal and Lazarus.
+Eleven command line utilities to modify PO translation files (extentions `.po`) used by [Free Pascal](https://www.freepascal.org/) and [Lazarus](https://www.lazarus-ide.org/).
 
-These tools are similar to utilities available for [GNU/Gettext](https://www.gnu.org/software/gettext/) and it's Delphi version [dxgettext](https://sourceforge.net/projects/dxgettext/) with the difference that they are adapted to the `.po` dialect used in Free Pascal / Lazarus.
+These tools are similar to utilities available for [GNU/Gettext](https://www.gnu.org/software/gettext/) and it's Delphi version [dxgettext](https://sourceforge.net/projects/dxgettext/) with the difference that they are adapted to the `.po` dialect used in Free Pascal / Lazarus. More on that here: [On Translating Free Pascal/Lazarus Programs](https://sigmdel.ca/michel/program/fpl/translating_fpl_en.html).
 
-**Warning**: The author offers no guarantee of any sort with regard to these tools. However an effort has been made to avoid losing any work. No file should ever be overwritten without first creating a backup.
+Besides being tailored to handle Free Pacal / Lazarus generated PO files, the utilies differ from those provided by the GNU gettext project by their style. Each utility does a single task which cannot be modified by command line switches. Indeed, aside from file names, the utilities accept no command line switches or options. So when a `GNU gettext equivalent utility` is given in the list below, the equivalency is obviously partial only and it may be necessary to provide additional filters or scripts to perform the exact same action as the poxxxx utility.
 
+It should be possible to compile the utilities for any of the Free Pascal supported targets. They have been used mostly in Linux, but  some tests have been done in Windows.
+
+
+**Warnings**: 
+
+1. The utilities do not handle extracted and translator comments and format flags. As far a the author knows, the Lazarus generated PO files do not contain extracted comments and format flags. In practice then, translator-added comments will be removed from any output PO file created by these utilities. This is unfortunate, but the *bug*, to be fixed in the near future, will not affect translations in any way.
+
+1. The author offers no guarantee of any sort with regard to these tools. However an effort has been made to avoid losing any work. In practice, this means that any file about to be overwritten is renamed and thus a backup remains available.
+
+---
+
+**Utilities**
 
 <!-- TOC -->
 
@@ -19,18 +31,22 @@ These tools are similar to utilities available for [GNU/Gettext](https://www.gnu
 - [8. posort](#8-posort)
 - [9. postrip](#9-postrip)
 - [10. poswap](#10-poswap)
-- [11. poupdate](#11-poupdate)
+- [11. poupdate](#11 pupate)
 
 <!-- /TOC -->
 
+<add podefuz  msgattrib>
+
 ## 1. poclean
 
-Removes all duplicate entries in a `.po` file. 
+Removes any entry in a `.po` file that has the same `reference`, `msgid` and `msgstr` as an other entry.
 
     usage:
         poclean source[.po] [output[.po]]
 
-Use [poscrub](#8-poscrub) for a more aggressive action.
+**Purpose**: Obviously, this is meant to remove redundant entries. Normally duplicates would never be created by the Lazarus gettext implementation. Use [poscrub](#8-poscrub) for a more aggressive action.
+
+**GNU gettext equivalent utility:** `msguniq`
 
 ## 2. pocopy
 
@@ -39,17 +55,15 @@ Copies all `msgid` to `msgstr` in a `.po` file.
     usage:
         pocopy source[.po] [output[.po]]
 
-Note: The typical first entry in a `.po` file
+The header entry will not be modified.
 
-    msgid ""
-    msgstr "Content-Type: text/plain; charset=UTF-8"
+**Purpose**: Use this to create a translation back to the original language:
 
-is not modified by this utility. However, should the first entry begin with an entity, such as  
+    pocpy myapp.po myapp.en.po
 
-    #: form1.label8.caption
+Then it will be possible to get back to the original language at run-time in `myapp`.
 
-then `msgstr` will be set equal to `msgid`.
-
+**GNU gettext equivalent utilities**: `msgen`, `msginit` 
 
 ## 3. pofill
 
@@ -58,13 +72,18 @@ Fills any empty `msgstr` field a `.po` file with the content of the correspondin
     usage:
         pofill sourcefile[.po] [outputfile[.po]]
 
+**Purpose**: Usefull when creating a regional version of the original language, say `en_GB` from an implicit `en` template. Just copy the template to `myapp.en_GB.po`, translate the few `msgid` that would be different in the UK to the corresponding `msgstr` and then use the utility to fill in all the other `msgstr`.
+
+**GNU gettext equivalent utilities**: `msgfilter`, `msgexec`
+
 ## 4. poginore
 
-Removes all entries found in a remove `.po` file from a source `.po` file
+Removes all entries found from a source `.po` file whose `reference` is found in a remove `.po` file
 
     usage:
         poignore source[.po] remove[.po] [output[.po]]
 
+**Purpose**: The template generated by the Lazarus gettext implementation can contain entries, such as captions that will be overwritten at run-time or technical terms that do not require translations. The same could be accomplished by adding the entry reference in the [Excluded](https://wiki.lazarus.freepascal.org/IDE_Window:__Project_Options#i18n) box in the `i18n Project Options` in the Lazarus IDE. 
 
 ## 5. poinfo
 
@@ -73,8 +92,11 @@ Provides information about a `.po` file.
     usage:
         poinfo source[.po]
 
-The utility reports errors while reading the source file, then displays summary statistics and ends with a list of entries that have a duplicate entity (which should never be allowed),
-a duplicate `msgid`, and a duplicate `msgstr`. Empty `msgstr` fields are not considered duplicates.
+The utility 
+
+   1. reports errors while reading the source file. The error checking is by no means exhaustive. 
+   2. displays summary statistics 
+   3. lists all entries that have a duplicate reference (which should never be allowed), a duplicate `msgid`, and a duplicate `msgstr`. Empty `msgstr` fields are not considered duplicates.
 
 Example output:
 
@@ -83,21 +105,25 @@ Example output:
         2  Error: Entry 3 (stringres.mssconnected) does not have a msgstr in line 19
         ...
         8  Error: Entry 12 (stringres.smessagesent) does not have a msgstr in line 61
-        9  Error: Entity empty in line 66
+        9  Error: Reference empty in line 66
 
     Source: bad`.po`
-    Entries: 54
-    Errors: 9
+    Errors: 0
+    Entries: 75 plus a header
+    Ambiguous entries: 1
+    Missing references: 0
+    Duplicate references: 2
+    Empty msgids: 0
+    Duplicate msgids: 5
+    Empty msgstrs: 0
+    Duplicate msgstrs: 5
     Fuzzys: 0
-    Duplicate entities: 3
-    Duplicate msgid: 3
-    Duplicate msgstr: 1
+    prevmsgids: 0
 
-    Entry 6 () has a duplicate entity
-    ... 
+    Entry 6 () has a duplicate reference
+        ... 
     Entry 47 (tbrokereditform.label2.caption) has a duplicate msgstr
 
-The error checking is by no means exhaustive.
 
 ## 6. pomerge
 
@@ -109,19 +135,21 @@ Merges two `.po` files.
 The output `.po` file is constructed as follows. 
 
 -  All entries in `more` are copied to `output`. 
--  All entries in `more` with an entity not in `source` are added to `output`. 
--  If an entry in `more` has an entitity that is also in `source` then the possible conflict is resolved as follows:
+-  All entries in `more` with a reference not in `source` are added to `output`. 
+-  If an entry in `more` has a reference that is also in `source` then the possible conflict is resolved as follows:
    - if the `msgid` and `msgstr` of both entries are the same, the entry is not added to `output` and it is removed from `more` (there is no conflict). 
    - if there is a difference in`msgid` or `msgstr`, the entry is not added to `output` and if is kept in `more` (there is a conflict).
 - At the end all remaining entries in `more` are saved under the name `more.po.conflicts`.    
 
+**GNU gettext equivalent utility**: `msgmerge`
+
+
 ## 7. poscrub
 
-Removes duplicate entries and all fuzzy and altmsgid fields in a `.po` file.
+Removes any entry in a `.po` file that has the same `reference`, `msgid` and `msgstr` as an other entry. Also removes all `fuzzy` flags and all `prevmsgid` fields.
 
     usage:
         poscrub source[.po] [output[.po]]
-
 
 
 Use [poclean](#1-poclean) for a less aggressive action.
@@ -129,12 +157,12 @@ Use [poclean](#1-poclean) for a less aggressive action.
 
 ## 8. posort
 
-Sorts a `.po` file by entity.
+Sorts a `.po` file by reference.
 
     usage:
         posort source[.po]  [output[.po]]
 
-It is not mandatory to sort entries alphabetically, but the Lazarus IDE does generate sorted `.po` files. <!-- This will not remove duplicate entries; for that see poclean. -->
+It is not mandatory to sort entries alphabetically, but the Lazarus IDE does generate sorted `.po` files. 
 
 ## 9. postrip
 
@@ -143,14 +171,14 @@ Removes all translated strings in a `.po` file.
     usage:
         stripmsgstr source[.po] [output[.po]]
 
-The first entry in the output `.po` file will be
+The header entry in the output `.po` file will be 
 
     msgid ""
     msgstr "Content-Type: text/plain; charset=UTF-8"
 
-no matter what the source contains.
+no matter if the source file had a header entry or not.
 
-A good way to generate a template.        
+**Purpose**: Generate a template from a good translation. 
 
 ## 10. poswap
 
@@ -161,12 +189,7 @@ Exchanges all `msgid` and `msgstr` in a `.po` file
 
 If the `msgstr` field on an entry is empty, then the `msgid` field will not be changed.
 
-Typically the first entry in the source file will define the content type as follows.
-
-    msgid ""
-    msgstr "Content-Type: text/plain; charset=UTF-8"
-
-Such an entry will not be altered.
+The header entry will not be altered.
 
 ## 11. poupdate
 
