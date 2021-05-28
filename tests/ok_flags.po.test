@@ -1,0 +1,43 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+#: stringres.spagenames
+#, fuzzy, no-c-format, python-format
+#| msgid ""
+#| "-Broker\n"
+#| "-Security\n"
+msgctxt "stringres.spangenames"
+msgid ""
+"Broker\n"
+"Security\n"
+"Encryption\n"
+"Publish Topic\n"
+"Subscribe Topics\n"
+msgstr ""
+"Agent\n"
+"Sécurité\n"
+"Cryptage\n"
+"Sujet publié\n"
+"Sujets souscris\n"
+
+#: stringres.sqos
+#, c-format
+msgid "Quality of Service"
+msgstr "Qualité du service"
+
+#: tmainform.connectbutton.caption
+#, fuzzy
+msgctxt "tmainform.connectbutton.caption"
+msgid "Disconnect"
+msgstr "Déconnecter"
+
+#: tform1.button1.caption
+#, no-c-format, python-format, fuzzy
+#| msgid "Close"
+msgid "&Close"
+msgstr "Exit"
+
+#: tform1.button2.caption
+#, no-c-format, fuzzy , python-format
+msgid "&Quit"
+msgstr "&Exit"

@@ -61,7 +61,7 @@
         <PackageName Value="FCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="3">
+    <Units Count="4">
       <Unit0>
         <Filename Value="pofilesunittest.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -74,6 +74,10 @@
         <Filename Value="../units/mpofiles.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="ok_flags.po.test"/>
+        <IsPartOfProject Value="True"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

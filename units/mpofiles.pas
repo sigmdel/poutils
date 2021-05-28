@@ -5,7 +5,7 @@ unit mpofiles;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, strutils;
 
 (*
 
@@ -38,14 +38,20 @@ fields in PO files and fuzzy is the only flag used  }
 
 type
 
+  { TPoEntry }
+
   TPoEntry = class
   private
-    FReference: string;   // #: <reference i.e. fully qualitified resource string name>
-    FPrevmsgid: TStrings; // #| msgid "xx"
-    FMsgctxt: string;     // msgctxt "xx"
-    FMsgid: TStrings;     // msgid "xx"
-    FMsgstr: TStrings;    // msgstr "xx"
-    FIsFuzzy: boolean;    // #, flag contains "fuzzy"
+    FReference: string;   // #:
+    FFlag: string;        // #,
+    FPrevmsgid: TStrings; // #|
+    FMsgctxt: string;     // msgctxt
+    FMsgid: TStrings;     // msgid
+    FMsgstr: TStrings;    // msgstr
+
+    FIsFuzzy: boolean;
+  protected
+    procedure SetFuzzy(value: boolean);
   public
       { True if another entry has the same reference (*) }
     HasDuplicateReference: boolean;
@@ -92,11 +98,13 @@ type
     function HasPrevmsgid: boolean;
 
     property Reference: string read FReference;
-    property IsFuzzy: boolean read FisFuzzy write FisFuzzy;
+    property Flag: string read FFlag;
     property msgctxt: string read FMsgctxt;
     property msgid: TStrings read FMsgId;
     property msgstr: TStrings read FMsgstr;
     property prevmsgid: TStrings read FPrevmsgid;
+
+    property IsFuzzy: boolean read FisFuzzy write SetFuzzy;
   end;
 
   { TPoFile }
@@ -162,7 +170,6 @@ type
       { Updates counts and writes summary statistics }
     procedure WriteStatistics(const filelabel: string);
 
-
     property AmbiguousCount: integer read FAmbiguousCount;
 
       { Number of entries }
@@ -214,7 +221,8 @@ implementation
 
 { TPoEntry }
 
-constructor TPoEntry.create;
+
+constructor TPoEntry.Create;
 begin
   inherited create;
   Fmsgid := TStringList.create;
@@ -222,7 +230,7 @@ begin
   Fprevmsgid := TStringList.create;
 end;
 
-destructor TPoEntry.destroy;
+destructor TPoEntry.Destroy;
 begin
   msgid.free;
   msgstr.free;
@@ -245,7 +253,7 @@ begin
   Fprevmsgid.assign(source.prevmsgid);
 end;
 
-function TPoEntry.Equals(Obj: TObject): boolean;
+function TPoEntry.Equals(Obj: TObject): Boolean;
 begin
   if Obj is TPoEntry then
     Result := Equals(TPoEntry(Obj))
@@ -279,6 +287,46 @@ end;
 function TPoEntry.Same(source: TPoEntry): boolean;
 begin
   result := HasMsgid and msgid.Equals(source.msgid) and (msgctxt = source.msgctxt);
+end;
+
+procedure TPoEntry.SetFuzzy(value: boolean);
+var
+  i: integer;
+  sl: TStrings;
+  wd: string;
+begin
+  i := pos('fuzzy', FFlag);
+  if (i > 0) and not value then begin
+    FIsFuzzy := false;
+    sl := TStringList.create;
+    try
+      i := 1;
+      repeat
+        wd := trim(ExtractWord(i, FFlag, [',']));
+        inc(i);
+        if wd = 'fuzzy' then
+          continue
+        else if wd <> '' then
+          sl.add(wd);
+      until wd = '';
+      if sl.count = 0 then
+        FFlag := ''
+      else begin
+        FFlag := sl[0];
+        for i := 1 to sl.count-1 do
+          FFlag := FFlag + ', ' + sl[i];
+      end;
+    finally
+      sl.free;
+    end;
+  end
+  else if (i < 0) and value then begin
+    if length(FFlag) > 0 then
+      FFlag := 'fuzzy, ' + FFlag
+    else
+      FFlag := 'fuzzy';
+    FIsFuzzy := true;
+  end;
 end;
 
 { TPoFile }
@@ -494,7 +542,7 @@ type
   TReadStatus = (
     rsIdle,     // starting
     rsReference,
-    rsFuzzy,
+    rsFlag,
     rsMsgctxt,
     rsMsgId,
     rsMsgstr,
@@ -546,25 +594,26 @@ var
     result := value = copy(currentLine, 1, length(value));
   end;
 
-  procedure ReadFuzzy;
+  procedure ReadFlag;
   {
-  #: dmulist.sinvalidperiods
-  #, fuzzy
-  msgctxt "dmulist.sinvalidperiods"
-  msgid "%d is an invalid number of periods"
-  msgstr "Nombre de périodes, %d, incorrect"
+  #, flag {, flag}
+
+  where flag = fuzzy | format-string
   }
   begin
-    if pos('fuzzy', currentLine) < 1 then begin
+    system.delete(currentLine, 1, 2); // delete leading #,
+    currentLine := trim(currentLine);
+    if length(currentLine) < 1 then begin
       status := rsError;
       inc(FErrorCount);
-      Report('missing "fuzzy" keyword');
+      Report('missing flag (fuzzy or format-string)');
       exit;
     end;
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
       Insert(count);
-    LastEntry.IsFuzzy := true;
-    status := rsFuzzy;
+    LastEntry.FFlag := currentLine;
+    LastEntry.FIsFuzzy := pos('fuzzy', currentLine) > 0;
+    status := rsFlag;
   end;
 
   procedure ReadReference;
@@ -762,7 +811,7 @@ begin
           continue;
         end;
         case currentLine[2] of
-          ',': ReadFuzzy;
+          ',': ReadFlag;
           ':': ReadReference;
           '|': ReadAltMsgId;
         else
@@ -812,8 +861,8 @@ begin
         if Reference <> '' then
           writeln(dst, '#: ', Reference);
 
-        if IsFuzzy then
-          writeln(dst, '#, fuzzy');
+        if Flag <> '' then
+          writeln(dst, '#, ', Flag);
 
         if (prevmsgid.Count > 0) then begin
           writeln(dst, '#| msgid "', prevmsgid[0], '"');
