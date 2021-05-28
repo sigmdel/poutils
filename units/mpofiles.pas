@@ -7,23 +7,46 @@ interface
 uses
   Classes, SysUtils;
 
-type
-  TPoEntry = class
-  public
-      { The elements of a Lazarus .po file entry.
-        To my knowledge, there are no
-          translator-comments // # xxxxxx
-          extracted-commants  // #.
-          previous-context    // #| msgctxt "xx"
-        fields in Lazarus .po files.
-        Furthermore, fuzzy is the only flag used  }
-    Reference: string;   // #: xx
-    IsFuzzy: boolean;    // #, fuzzy
-    msgctxt: string;     // msgctxt "xx"
-    msgid: TStrings;     // msgid "xx"
-    msgstr: TStrings;    // msgstr "xx"
-    prevmsgid: TStrings; // #| msgid "xx"
+(*
 
+PO file entry as defined in chapter 3 The Format of PO Files
+(https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html#PO-Files)
+of GNU gettext utilities
+
+   white-space
+   #  translator-comments
+   #. extracted-comments
+   #: reference…
+   #, flag…
+   #| msgctxt previous-context
+   #| msgid previous-untranslated-string
+   msgctxt context
+   msgid untranslated-string
+   msgstr translated-string
+
+The format for the #, flag line is:
+
+   #, fuzzy, format-string [, format-string]
+
+To my knowledge, Lazarus never generates
+     translator-comments
+     extracted-commants
+     previous-context
+fields in PO files and fuzzy is the only flag used  }
+
+*)
+
+type
+
+  TPoEntry = class
+  private
+    FReference: string;   // #: <reference i.e. fully qualitified resource string name>
+    FPrevmsgid: TStrings; // #| msgid "xx"
+    FMsgctxt: string;     // msgctxt "xx"
+    FMsgid: TStrings;     // msgid "xx"
+    FMsgstr: TStrings;    // msgstr "xx"
+    FIsFuzzy: boolean;    // #, flag contains "fuzzy"
+  public
       { True if another entry has the same reference (*) }
     HasDuplicateReference: boolean;
 
@@ -67,6 +90,13 @@ type
 
       { Returns true if prevmsgid has no lines or contains a single empty line }
     function HasPrevmsgid: boolean;
+
+    property Reference: string read FReference;
+    property IsFuzzy: boolean read FisFuzzy write FisFuzzy;
+    property msgctxt: string read FMsgctxt;
+    property msgid: TStrings read FMsgId;
+    property msgstr: TStrings read FMsgstr;
+    property prevmsgid: TStrings read FPrevmsgid;
   end;
 
   { TPoFile }
@@ -187,9 +217,9 @@ implementation
 constructor TPoEntry.create;
 begin
   inherited create;
-  msgid := TStringList.create;
-  msgstr := TStringList.create;
-  prevmsgid := TStringList.create;
+  Fmsgid := TStringList.create;
+  Fmsgstr := TStringList.create;
+  Fprevmsgid := TStringList.create;
 end;
 
 destructor TPoEntry.destroy;
@@ -208,11 +238,11 @@ begin
   IsAmbiguous := false;
   IsFuzzy := source.IsFuzzy;
 
-  Reference := source.Reference;
-  msgctxt := source.msgctxt;
-  msgid.assign(source.msgid);
-  msgstr.assign(source.msgstr);
-  prevmsgid.assign(source.prevmsgid);
+  FReference := source.Reference;
+  Fmsgctxt := source.msgctxt;
+  Fmsgid.assign(source.msgid);
+  Fmsgstr.assign(source.msgstr);
+  Fprevmsgid.assign(source.prevmsgid);
 end;
 
 function TPoEntry.Equals(Obj: TObject): boolean;
@@ -544,7 +574,7 @@ var
     system.delete(currentLine, 1, 2);
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
       Insert(count);
-    LastEntry.Reference := trim(currentLine);
+    LastEntry.FReference := trim(currentLine);
     if LastEntry.Reference = '' then begin
       inc(FErrorCount);
       Report('Reference empty');
@@ -641,7 +671,7 @@ var
        Report('Missing trailing " quote in msgctx');
        // carry on as if ok
     end;
-    LastEntry.msgctxt := trim(currentLine);
+    LastEntry.FMsgctxt := trim(currentLine);
     status := rsMsgctxt;
   end;
 
