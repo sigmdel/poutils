@@ -581,12 +581,12 @@ end;
 
 type
   TReadStatus = (
-    rsIdle,     // starting
-    rsTranslatorComments,  // NOT IMPLEMENTED
-    rsExtractedComments,   // NOT IMPLEMENTED
+    rsIdle,  // starting
+    rsTranslatorComments,
+    rsExtractedComments,
     rsReference,
     rsFlag,
-    rsPrevMsgctxt,         // NOT IMPLEMENTED
+    rsPrevMsgctxt,
     rsPrevMsgid,
     rsMsgctxt,
     rsMsgId,
@@ -607,10 +607,10 @@ var
     end;
   end;
 
-  procedure CheckEntry(n: integer);
+  procedure CheckLastEntry;
   begin
-    exit;
-    if (n = 0) and (Entries[0].Reference = '') then with Entries[0] do begin
+    if Count < 1 then exit;
+    if (Count = 1) and (Entries[0].Reference = '') then with Entries[0] do begin
       if HasMsgid then begin
         inc(FErrorCount);
         Report('Entry 0 with no reference has an msgid');
@@ -620,18 +620,22 @@ var
         Report('Entry 0 with no reference does not have a msgstr');
       end;
     end
-    else with Entries[n] do begin
+    else with Entries[Count-1] do begin
+      if Reference = '' then begin
+        inc(FErrorCount);
+        Report(Format('Entry %d does not have a reference', [Count-1]));
+      end;
       if not HasMsgid then begin
         inc(FErrorCount);
-        Report(Format('Entry %d (%s) does not have a msgid', [n, Reference]));
+        Report(Format('Entry %d (%s) does not have a msgid', [Count-1, Reference]));
       end;
-      (*
-      if not HasMsgstr then begin
-        inc(FErrorCount);
-        Report(Format('Entry %d (%s) does not have a msgstr', [n, Reference]));
-      end;
-      *)
     end;
+  end;
+
+  procedure AddEntry;
+  begin
+    CheckLastEntry;
+    Insert(Count);
   end;
 
   function StartsWith(const value: string): boolean;
@@ -646,7 +650,7 @@ var
   begin
     system.delete(currentline, 1, 2);
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
-      Insert(count);
+      AddEntry;
     LastEntry.TranslatorComments.add(trim(currentLine));
     status := rsTranslatorComments;
   end;
@@ -658,7 +662,7 @@ var
   begin
     system.delete(currentline, 1, 2);
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
-      Insert(count);
+      AddEntry;
     LastEntry.ExtractedComments.add(trim(currentLine));
     status := rsExtractedComments;
   end;
@@ -679,7 +683,7 @@ var
       exit;
     end;
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
-      Insert(count);
+      AddEntry;
     LastEntry.FFlag := currentLine;
     LastEntry.FIsFuzzy := pos('fuzzy', currentLine) > 0;
     status := rsFlag;
@@ -690,11 +694,9 @@ var
    #: tform1.caption
   }
   begin
-    if count > 0 then
-      CheckEntry(count-1);
     system.delete(currentLine, 1, 2); // skip #:
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
-      Insert(count);
+      AddEntry;
     LastEntry.FReference := trim(currentLine); // removes any leading space
     if LastEntry.Reference = '' then begin
       inc(FErrorCount);
@@ -717,7 +719,7 @@ var
     q, n: integer;
   begin
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
-      Insert(count);
+      AddEntry;
     system.delete(currentLine, 1, 2); // eliminate #|
     currentLine := trim(currentLine);
     if startsWith('msgctxt') then begin
@@ -806,7 +808,7 @@ var
     q, n: integer;
   begin
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
-      Insert(count);
+      AddEntry;
     q := pos('"', currentLine);
     if q < 1 then begin
       inc(FErrorCount);
@@ -832,7 +834,7 @@ var
     q, n: integer;
   begin
     if status in [rsIdle, rsMsgstr, rsError] then begin
-      Insert(count);   // starting new entry
+      AddEntry;   // starting new entry
     end;
 
     // msg must start with " quote
@@ -861,7 +863,7 @@ var
     q, n: integer;
   begin
     if status in [rsIdle, rsError] then
-      Insert(count);
+      AddEntry;
     q := pos('"', currentLine);
     if q < 1 then begin
       inc(FErrorCount);
@@ -942,9 +944,8 @@ begin
         Report('Unknow msg identifier');
       end;
     end;
-    if count > 1 then
-      CheckEntry(count-1);
   finally
+    CheckLastEntry;
     closefile(src);
   end;
 end;
