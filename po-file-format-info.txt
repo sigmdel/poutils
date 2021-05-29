@@ -1,0 +1,123 @@
+Two main references:
+
+https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html#PO-Files
+3 The Format of PO Files
+
+from
+
+https://www.gnu.org/software/gettext/manual/html_node/index.html
+GNU gettext utilities
+
+
+http://pology.nedohodnik.net/doc/user/en_US/ch-poformat.html
+Chapter 2. The PO Format
+
+from
+
+http://pology.nedohodnik.net/doc/user/en_US/index.html
+Pology User Manual
+by Chusslove Illich
+
+
+Other references:
+
+https://github.com/izimobil/polib
+polib is a library to manipulate, create, modify gettext files (pot, po and mo files). You can load existing files, iterate through it's entries, add, modify entries, comments or metadata, etc... or create new po files from scratch.
+
+https://polib.readthedocs.io/en/latest/
+Welcome to polib’s documentation!
+
+
+
+
+From GNU gettext utilities
+
+Structure of PO a entry:
+
+white-space
+#  translator-comments
+#. extracted-comments
+#: reference…
+#, flag…
+#| msgid previous-untranslated-string
+msgid untranslated-string
+msgstr translated-string
+
+or PO entry with a context specifier:
+
+white-space
+#  translator-comments
+#. extracted-comments
+#: reference…
+#, flag…
+#| msgctxt previous-context
+#| msgid previous-untranslated-string
+msgctxt context
+msgid untranslated-string
+msgstr translated-string
+
+A plural forms entry:
+
+white-space
+#  translator-comments
+#. extracted-comments
+#: reference…
+#, flag…
+#| msgid previous-untranslated-string-singular
+#| msgid_plural previous-untranslated-string-plural
+msgid untranslated-string-singular
+msgid_plural untranslated-string-plural
+msgstr[0] translated-string-case-0
+...
+msgstr[N] translated-string-case-n
+
+
+The header entry (which must be the first entry)
+"An empty untranslated-string is reserved to contain the header entry with the meta information (see Header Entry). This header entry should be the first entry of the file. The empty untranslated-string is reserved for this purpose and must not be used anywhere else. "
+
+msgid ""
+"Here is an example of how one might continue a very long string\n"
+"for the common case the string represents multi-line output.\n"
+
+http://pology.nedohodnik.net/doc/user/en_US/ch-poformat.html#sec-poheader
+2.6. PO Header
+
+"...Pristine header,  before any translation on the PO file has been done:"
+
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR This_file_is_part_of_KDE
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2008-09-03 10:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+"The header updated to reflect the translation state could look like this:"
+
+# Translation of kstars.po into Spanish.
+# This file is distributed under the same license as the kdeedu package.
+# Pablo de Vicente <pablo@foo.com>, 2005, 2006, 2007, 2008.
+# Eloy Cuadra <eloy@bar.net>, 2007, 2008.
+msgid ""
+msgstr ""
+"Project-Id-Version: kstars\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2008-09-01 09:37+0200\n"
+"PO-Revision-Date: 2008-07-22 18:13+0200\n"
+"Last-Translator: Eloy Cuadra <eloy@bar.net>\n"
+"Language-Team: Spanish <kde-l10n-es@kde.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
