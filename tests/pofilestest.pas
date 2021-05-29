@@ -27,6 +27,7 @@ type
     procedure TestSaveOkComplexFile;
     procedure TestOkFlagsFile;
     procedure TestFuzzies;
+    procedure TestOkCommentedFile;
   end;
 
 implementation
@@ -158,12 +159,12 @@ end;
 
 procedure TTestPofiles.TestSaveOkComplexFile;
 const
-  tempfilename = 'ok_complex_saved.po';
+  tempfilename = 'ok_complex.po';
 var
   source: TStrings;
   copy: TStrings;
 begin
-  PoFile.Filename := 'ok_complex.po.test';
+  PoFile.Filename := tempfilename + '.test';
   AssertEquals('Count:', 6, PoFile.Count);
   PoFile.SaveToFile(tempfilename);
   copy := TStringList.create;
@@ -171,7 +172,7 @@ begin
     source := TStringList.create;
     try
       copy.loadFromFile(tempfilename);
-      source.loadFromFile('ok_complex.po.test');
+      source.loadFromFile(tempfilename + '.test');
       // get rid of trailing empty lines
       while copy[copy.count-1] = '' do
         copy.delete(copy.count-1);
@@ -217,7 +218,7 @@ begin
     source := TStringList.create;
     try
       copy.loadFromFile(tempfilename);
-      source.loadFromFile('ok_flags.po.test');
+      source.loadFromFile(tempfilename+ '.test');
       // get rid of trailing empty lines
       while copy[copy.count-1] = '' do
         copy.delete(copy.count-1);
@@ -235,8 +236,6 @@ begin
     deletefile(tempfilename);
   end;
 end;
-
-
 
 procedure TTestPofiles.TestFuzzies;
 const
@@ -274,7 +273,59 @@ begin
   AssertEquals('DuplicateMsgidCount', 0, PoFile.DuplicateMsgidCount);
   AssertEquals('DuplicateMsgstrCount', 0, PoFile.DuplicateMsgstrCount);
 
-  PoFile.SaveToFile(tempfilename);
+  //PoFile.SaveToFile(tempfilename);
+end;
+
+procedure TTestPofiles.TestOkCommentedFile;
+const
+  tempfilename = 'ok_commented.po';
+var
+  source: TStrings;
+  copy: TStrings;
+  i: integer;
+  src: string;
+begin
+  PoFile.Filename := tempfilename + '.test';
+  AssertEquals('Count:', 6, PoFile.Count);
+  AssertEquals('ErrorCount', 0, PoFile.ErrorCount);
+  PoFile.UpdateCounts;
+  AssertEquals('AmbiguousCount', 0, PoFile.AmbiguousCount);
+  AssertEquals('FuzzyCount', 3, PoFile.FuzzyCount);
+  AssertEquals('EmptyMsgidCount', 0, PoFile.EmptyMsgidCount);
+  AssertEquals('EmptyMsgstgrCount', 0, PoFile.EmptyMsgstrCount);
+  AssertEquals('PrevMsgidCount', 2, PoFile.PrevMsgidCount);
+  AssertEquals('MissingReferenceCount', 0, PoFile.MissingReferenceCount);
+  AssertEquals('DuplicateReferenceCount', 0, PoFile.DuplicateReferenceCount);
+  AssertEquals('DuplicateMsgidCount', 0, PoFile.DuplicateMsgidCount);
+  AssertEquals('DuplicateMsgstrCount', 0, PoFile.DuplicateMsgstrCount);
+  PoFile.SaveToFile(tempfilename); // compare files!
+
+  copy := TStringList.create;
+  try
+    source := TStringList.create;
+    try
+      copy.loadFromFile(tempfilename);
+      source.loadFromFile(tempfilename+ '.test');
+      // get rid of trailing empty lines
+      while copy[copy.count-1] = '' do
+        copy.delete(copy.count-1);
+      while source[source.count-1] = '' do
+        source.delete(source.count-1);
+
+      AssertEquals('source.count', source.count, copy.count);
+      for i := 0 to source.count-1 do begin
+        src := source[i];
+        if src = '#' then src := '# ';
+        AssertEquals(Format('line %d', [i]), src, copy[i]);
+      end;
+    finally
+      source.free;
+    end;
+  finally
+    copy.free;
+    deletefile(tempfilename);
+  end;
+
 end;
 
 

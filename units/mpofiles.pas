@@ -42,12 +42,15 @@ type
 
   TPoEntry = class
   private
-    FReference: string;   // #:
-    FFlag: string;        // #,
-    FPrevmsgid: TStrings; // #|
-    FMsgctxt: string;     // msgctxt
-    FMsgid: TStrings;     // msgid
-    FMsgstr: TStrings;    // msgstr
+    FTranslatorComments: TStrings; // #<space>
+    FExtractedComments: TStrings;  // #.
+    FReference: string;            // #:
+    FFlag: string;                 // #,
+    FPrevmsgctxt: string;          // #| msgctxt
+    FPrevmsgid: TStrings;          // #| msgid
+    FMsgctxt: string;              // msgctxt
+    FMsgid: TStrings;              // msgid
+    FMsgstr: TStrings;             // msgstr
 
     FIsFuzzy: boolean;
   protected
@@ -88,21 +91,52 @@ type
         are the same}
     function Same(source: TPoEntry): boolean;
 
-      { Returns true if msgid has no lines or contains a single empty line }
+      { Returns true if msgid in not empty }
     function HasMsgid: boolean;
 
-      { Returns true if msgid has no lines or contains a single empty line }
+      { Returns true if msgstr is not empty }
     function HasMsgstr: boolean;
 
-      { Returns true if prevmsgid has no lines or contains a single empty line }
+      { Returns true if prevmsgid is not empty }
     function HasPrevmsgid: boolean;
 
+      { PO entry translator-comments field }
+    property TranslatorComments: TStrings read FTranslatorComments;
+
+      { PO entry extracted-comments field }
+    property ExtractedComments: TStrings read FExtractedComments;
+
+      { PO entry reference field.
+        In the Free Pascal / Lazarus implemenation this is a fully
+        qualified name to a resource string (something like TForm1.Label3.caption)
+        guaranteed to be unique if the application compiles.}
     property Reference: string read FReference;
+
+      { PO entry flag field.
+        Only the fuzzy flag is used here, but format flags will not be
+        changed. This is a read only property, use the IsFuzzy property to
+        add or remove "fuzzy" from the Flag property.}
     property Flag: string read FFlag;
-    property msgctxt: string read FMsgctxt;
-    property msgid: TStrings read FMsgId;
-    property msgstr: TStrings read FMsgstr;
-    property prevmsgid: TStrings read FPrevmsgid;
+
+      { PO entry previous-context field. }
+    property Prevmsgctxt: string read FPrevmsgctxt;
+
+      { PO entry previious-unstranslated-string field}
+    property Prevmsgid: TStrings read FPrevmsgid;
+
+      { PO entry context field.
+        If present in a Free Pascal / Lazarus generated file, it will
+        be the qualitifed name in Reference. The context is in quotes
+        in the PO file, but they are stripped here}
+    property Msgctxt: string read FMsgctxt;
+
+      { PO entry untranslated-string field.
+        These strings are quoted in the PO file but not in here}
+    property Msgid: TStrings read FMsgId;
+
+      { PO entry translated-string field.
+        These strings are quoted in the PO file but not in here}
+    property Msgstr: TStrings read FMsgstr;
 
     property IsFuzzy: boolean read FisFuzzy write SetFuzzy;
   end;
@@ -225,16 +259,20 @@ implementation
 constructor TPoEntry.Create;
 begin
   inherited create;
+  FTranslatorComments := TStringList.create;
+  FExtractedComments := TStringList.create;
+  Fprevmsgid := TStringList.create;
   Fmsgid := TStringList.create;
   Fmsgstr := TStringList.create;
-  Fprevmsgid := TStringList.create;
 end;
 
 destructor TPoEntry.Destroy;
 begin
-  msgid.free;
   msgstr.free;
+  msgid.free;
   prevmsgid.free;
+  extractedcomments.free;
+  translatorcomments.free;
   inherited destroy;
 end;
 
@@ -244,9 +282,13 @@ begin
   HasDuplicateMsgid := false;
   HasDuplicateMsgstr := false;
   IsAmbiguous := false;
-  IsFuzzy := source.IsFuzzy;
+  FIsFuzzy := source.IsFuzzy;
 
+  FTranslatorComments.assign(source.translatorcomments);
+  FExtractedComments.assign(source.extractedcomments);
   FReference := source.Reference;
+  FFlag := source.Flag;
+  FPrevmsgctxt := source.prevmsgctxt;
   Fmsgctxt := source.msgctxt;
   Fmsgid.assign(source.msgid);
   Fmsgstr.assign(source.msgstr);
@@ -469,7 +511,6 @@ begin
   result := false;
 end;
 
-
 function TPoFile.GetCount: integer;
 begin
   result := FList.Count;
@@ -541,19 +582,22 @@ end;
 type
   TReadStatus = (
     rsIdle,     // starting
+    rsTranslatorComments,  // NOT IMPLEMENTED
+    rsExtractedComments,   // NOT IMPLEMENTED
     rsReference,
     rsFlag,
+    rsPrevMsgctxt,         // NOT IMPLEMENTED
+    rsPrevMsgid,
     rsMsgctxt,
     rsMsgId,
     rsMsgstr,
-    rsAltMsgid,
     rsError);
 
 procedure TPoFile.LoadFile;
 var
   src: TextFile;
   currentLineNumber: integer;
-  currentLine: string;
+  currentLine: string;  // trimmed current line from src
   status: TReadStatus;
 
   procedure Report(const msg: string);
@@ -565,6 +609,7 @@ var
 
   procedure CheckEntry(n: integer);
   begin
+    exit;
     if (n = 0) and (Entries[0].Reference = '') then with Entries[0] do begin
       if HasMsgid then begin
         inc(FErrorCount);
@@ -594,12 +639,36 @@ var
     result := value = copy(currentLine, 1, length(value));
   end;
 
-  procedure ReadFlag;
+  procedure ReadTranslatorComments;
   {
+   # a comment
+  }
+  begin
+    system.delete(currentline, 1, 2);
+    if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
+      Insert(count);
+    LastEntry.TranslatorComments.add(trim(currentLine));
+    status := rsTranslatorComments;
+  end;
+
+  procedure ReadExtractedComments;
+  {
+   #. a comment
+  }
+  begin
+    system.delete(currentline, 1, 2);
+    if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
+      Insert(count);
+    LastEntry.ExtractedComments.add(trim(currentLine));
+    status := rsExtractedComments;
+  end;
+
+  procedure ReadFlag;
+  (*
   #, flag {, flag}
 
   where flag = fuzzy | format-string
-  }
+  *)
   begin
     system.delete(currentLine, 1, 2); // delete leading #,
     currentLine := trim(currentLine);
@@ -617,13 +686,16 @@ var
   end;
 
   procedure ReadReference;
+  {
+   #: tform1.caption
+  }
   begin
     if count > 0 then
       CheckEntry(count-1);
-    system.delete(currentLine, 1, 2);
+    system.delete(currentLine, 1, 2); // skip #:
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
       Insert(count);
-    LastEntry.FReference := trim(currentLine);
+    LastEntry.FReference := trim(currentLine); // removes any leading space
     if LastEntry.Reference = '' then begin
       inc(FErrorCount);
       Report('Reference empty');
@@ -631,41 +703,72 @@ var
     status := rsReference;
   end;
 
+  procedure ReadPrevious;
   {
-  #: tnewprojectform.label2.caption
-  #, fuzzy
+  #| msgctxt "oldctxt"
+    or
+  #| msgid "oldid"
+    or
   #| msgid ""
   #| "Default names\n"
   #| "(%d is number)\n"
-  msgid "Default names"
-  msgstr ""
-  "Noms par défaut\n"
-  "(%d : index)\n"
   }
-  procedure ReadAltmsgid;
   var
     q, n: integer;
   begin
     if status in [rsIdle, rsMsgId, rsMsgstr, rsError] then
       Insert(count);
+    system.delete(currentLine, 1, 2); // eliminate #|
+    currentLine := trim(currentLine);
+    if startsWith('msgctxt') then begin
+      status := rsPrevMsgctxt;
+      if (LastEntry.Prevmsgctxt <> '') then begin
+        inc(FErrorCount);
+        Report('More than one #| msgctxt');
+        // carry on
+      end;
+    end
+    else if startsWith('msgid') then begin
+      status := rsPrevmsgId;
+      if LastEntry.HasPrevmsgid then begin
+        inc(FErrorCount);
+        Report('More than one #| msgid');
+        // carry on
+      end;
+    end
+    else if status <> rsPrevmsgId  then begin
+      inc(FErrorCount);
+      Report('Previous context should be only one line');
+      status := rsError;
+      exit;
+    end;
+
     q := pos('"', currentLine);
     if q < 1 then begin
       inc(FErrorCount);
       status := rsError;
-      Report('Missing leading " quote in altmsgid');
+      Report('Missing leading " quote in prevmsgid');
       exit;
     end;
     system.delete(currentLine, 1, q);
+
     n := length(currentLine);
     if currentLine[n] = '"' then
       system.delete(currentLine, n, 1)
     else begin
       inc(FErrorCount);
-      Report('Missing trailing " quote in altmsgid');
+      Report('Missing trailing " quote in prevmsgid');
       // carry on as if ok
     end;
-    LastEntry.prevmsgid.Add(currentLine);
-    status := rsAltmsgId;
+    if status = rsPrevmsgId then
+      LastEntry.prevmsgid.Add(currentLine)
+    else if status = rsPrevmsgctxt then begin
+      LastEntry.Fprevmsgctxt := currentLine;
+      if currentLine = '' then begin
+        inc(FErrorCount);
+        Report('Missing previous msgctxt');
+      end;
+    end;
   end;
 
   {ReadExtraLines
@@ -689,7 +792,7 @@ var
       LastEntry.msgid.Add(currentLine)
     else if status = rsMsgstr then
       LastEntry.msgstr.Add(currentLine)
-    else if status = rsAltmsgid then
+    else if status = rsPrevmsgid then
       LastEntry.prevmsgid.Add(currentLine)
     else begin
       status := rsError;
@@ -799,7 +902,9 @@ begin
       inc(currentLineNumber);
       currentLine := trim(currentLine);
       if currentLine = '' then
-        continue;
+        continue
+      else if currentLine = '#' then
+        currentLine := '# ';             // allow empty translator comment
       //writeln('dbg: ', currentline);
       if currentLine[1] = '"' then
         ReadExtraLine
@@ -811,9 +916,11 @@ begin
           continue;
         end;
         case currentLine[2] of
+          ' ': ReadTranslatorComments;
+          '.': ReadExtractedComments;
           ',': ReadFlag;
           ':': ReadReference;
-          '|': ReadAltMsgId;
+          '|': ReadPrevious;
         else
           begin
             status := rsError;
@@ -855,8 +962,15 @@ begin
     rewrite(dst);
     for i := 0 to Count-1 do
       with Entries[i] do begin
+        // dbg:: writeln(Format('Writing entry %d, reference: <%s>', [i, reference]));
         if i > 0 then
           writeln(dst);
+
+        for j := 0 to TranslatorComments.count-1 do
+          writeln(dst, '# ', TranslatorComments[j]);
+
+        for j := 0 to ExtractedComments.count-1 do
+          writeln(dst, '#. ', ExtractedComments[j]);
 
         if Reference <> '' then
           writeln(dst, '#: ', Reference);
@@ -864,14 +978,17 @@ begin
         if Flag <> '' then
           writeln(dst, '#, ', Flag);
 
+        if Prevmsgctxt <> '' then
+          writeln(dst, '#| msgctxt "', Prevmsgctxt, '"');
+
         if (prevmsgid.Count > 0) then begin
-          writeln(dst, '#| msgid "', prevmsgid[0], '"');
+          writeln(dst, '#| msgid "', Prevmsgid[0], '"');
           for j := 1 to prevmsgid.count-1 do
-            writeln(dst, '#| "', prevmsgid[j], '"');
+            writeln(dst, '#| "', Prevmsgid[j], '"');
         end;
 
         if msgctxt <> '' then
-          writeln(dst, 'msgctxt "', msgctxt, '"');
+          writeln(dst, 'msgctxt "', Msgctxt, '"');
 
         if (msgid.count = 0) then
           writeln(dst, 'msgid ""')
@@ -884,9 +1001,9 @@ begin
         if (msgstr.count = 0) then
           writeln(dst, 'msgstr ""')
         else begin
-          writeln(dst, 'msgstr "', msgstr[0], '"');
+          writeln(dst, 'msgstr "', Msgstr[0], '"');
           for j := 1 to msgstr.count-1 do
-              writeln(dst, '"', msgstr[j], '"');
+              writeln(dst, '"', Msgstr[j], '"');
         end;
         {
          #: dmulist.sinvalidperiods
