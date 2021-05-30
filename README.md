@@ -31,7 +31,7 @@ It should be possible to compile the utilities for any of the Free Pascal suppor
 - [8. posort](#8-posort)
 - [9. postrip](#9-postrip)
 - [10. poswap](#10-poswap)
-- [11. poupdate](#11 pupate)
+- [11. poupdate](#11-poupdate)
 
 <!-- /TOC -->
 
