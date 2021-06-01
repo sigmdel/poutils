@@ -49,7 +49,7 @@ begin
       if not SaveToBackup(fname) then
         fname := UniqueFilename(fname);
       OutPo.SaveToFile(fname);
-      OutPo.WriteStatistics('Output');
+      OutPo.WriteStatistics('Output', fname);
     finally
       SourcePo.free;
       RemovePo.free;

@@ -38,7 +38,7 @@ begin
       if not SaveToBackup(fname) then
         fname := UniqueFilename(fname);
       PoFile.SaveToFile(fname);
-      PoFile.WriteStatistics('Output');
+      PoFile.WriteStatistics('Output', fname);
     finally
       PoFile.free;
     end;

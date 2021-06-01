@@ -58,7 +58,7 @@ begin
             writeln('One translation found')
           else
             writeln(Format('%d translations found', [count]));
-          SourcePo.WriteStatistics('Output');
+          SourcePo.WriteStatistics('Output', fname);
         end;
       finally
         TransPo.free;

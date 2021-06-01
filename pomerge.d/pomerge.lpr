@@ -72,7 +72,7 @@ begin
           fname := SourcePo.Filename;
         SaveToBackup(fname);
         SourcePo.SaveToFile(fname);
-        SourcePo.WriteStatistics('Output');
+        SourcePo.WriteStatistics('Output', fname);
 
         If (MorePo.Count = 0) then
           writeln('No conflicting entries')
@@ -81,7 +81,7 @@ begin
           if not SaveToBackup(fname) then
             fname := UniqueFilename(fname);
           MorePo.SaveToFile(fname);
-          MorePo.WriteStatistics('Conflicts');
+          MorePo.WriteStatistics('Conflicts', fname);
         end;
       finally
         MorePo.free;
