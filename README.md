@@ -135,7 +135,7 @@ Merges two `.po` files.
 
 The output `.po` file is constructed as follows. 
 
--  All entries in `more` are copied to `output`. 
+-  All entries in `source` are copied to `output`. 
 -  All entries in `more` with a reference not in `source` are added to `output`. 
 -  If an entry in `more` has a reference that is also in `source` then the possible conflict is resolved as follows:
    - if the `msgid` and `msgstr` of both entries are the same, the entry is not added to `output` and it is removed from `more` (there is no conflict). 
